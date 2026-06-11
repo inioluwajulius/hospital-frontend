@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-primary: 16 185 129;
+    --color-secondary: 8 145 178;
+    --color-accent: 16 185 129;
+    --color-danger: 239 68 68;
+    --color-warning: 251 146 60;
+    --color-success: 34 197 94;
+    --color-info: 59 130 246;
+    --text-primary: 15 23 42;
+    --text-secondary: 71 85 105;
+    --text-tertiary: 148 163 184;
+  }
+
+  /* Global typography defaults */
+  * {
+    font-family: Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, sans-serif;
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+  }
+
+  p {
+    @apply text-base text-gray-700;
+  }
+
+  /* Heading styles */
+  h1 {
+    @apply text-5xl font-bold leading-tight text-gray-900 tracking-tight;
+  }
+
+  h2 {
+    @apply text-4xl font-bold leading-snug text-gray-900 tracking-tight;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold leading-snug text-gray-800;
+  }
+
+  h4 {
+    @apply text-xl font-semibold leading-snug text-gray-800;
+  }
+
+  h5 {
+    @apply text-lg font-semibold text-gray-800;
+  }
+
+  h6 {
+    @apply text-base font-semibold text-gray-800;
+  }
+
+  /* Button base styles */
+  button {
+    @apply font-medium transition-colors duration-200;
+  }
+
+  /* Input styles */
+  input,
+  textarea,
+  select {
+    @apply text-base font-normal;
+  }
+
+  /* Label styles */
+  label {
+    @apply text-sm font-medium text-gray-700;
+  }
+
+  /* Small text */
+  small {
+    @apply text-sm text-gray-600;
+  }
+
+  /* Code styles */
+  code {
+    @apply font-mono text-sm bg-gray-100 px-2 py-1 rounded;
+  }
+}
+
+@layer utilities {
+  .bg-primary {
+    @apply bg-[rgb(var(--color-primary))];
+  }
+
+  .text-primary {
+    @apply text-[rgb(var(--color-primary))];
+  }
+
+  .border-primary {
+    @apply border-[rgb(var(--color-primary))];
+  }
+
+  .bg-secondary {
+    @apply bg-[rgb(var(--color-secondary))];
+  }
+
+  .text-secondary {
+    @apply text-[rgb(var(--color-secondary))];
+  }
+
+  .bg-accent {
+    @apply bg-[rgb(var(--color-accent))];
+  }
+
+  .text-accent {
+    @apply text-[rgb(var(--color-accent))];
+  }
+
+  .shadow-primary\/30 {
+    box-shadow: 0 10px 15px -3px rgb(var(--color-primary) / 0.3);
+  }
+
+  .shadow-primary\/40 {
+    box-shadow: 0 10px 15px -3px rgb(var(--color-primary) / 0.4);
+  }
+
+  .hover\:shadow-primary\/30:hover {
+    box-shadow: 0 10px 15px -3px rgb(var(--color-primary) / 0.3);
+  }
+
+  .hover\:shadow-primary\/40:hover {
+    box-shadow: 0 10px 15px -3px rgb(var(--color-primary) / 0.4);
+  }
+}
