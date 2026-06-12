@@ -7,7 +7,7 @@ const getBaseURL = () => {
         return "/api/v1";
     }
     // In development, use localhost
-    return import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+    return import.meta.env.VITE_API_BASE_URL || "https://hospital-backend-xdjf.onrender.com/api/v1";
 };
 
 const getBaseURLLegacy = () => {
@@ -16,7 +16,7 @@ const getBaseURLLegacy = () => {
         return "/api";
     }
     // In development, use localhost
-    return import.meta.env.VITE_API_BASE_URL_LEGACY || "http://localhost:5000/api";
+    return import.meta.env.VITE_API_BASE_URL_LEGACY || "https://hospital-backend-xdjf.onrender.com/api";
 };
 
 const API = axios.create({
