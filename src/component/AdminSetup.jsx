@@ -47,7 +47,7 @@ export const AdminSetup = ({ onRegister, onCancel }) => {
       <div className="max-w-xl w-full">
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-teal-600 rounded-2xl shadow-xl shadow-teal-600/20 mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-600 rounded-2xl shadow-xl shadow-emerald-600/20 mb-4">
             <ShieldCheck className="text-white" size={32} />
           </div>
           <h1 className="text-3xl font-extrabold text-white tracking-tight">Hospital Admin</h1>
@@ -72,7 +72,7 @@ export const AdminSetup = ({ onRegister, onCancel }) => {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-sm transition-all outline-none focus:ring-2 focus:ring-teal-600/20 focus:bg-white focus:border-teal-600/10"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-sm transition-all outline-none focus:ring-2 focus:ring-emerald-600/20 focus:bg-white focus:border-emerald-600/10"
                       placeholder="Admin Name"
                     />
                   </div>
@@ -87,7 +87,7 @@ export const AdminSetup = ({ onRegister, onCancel }) => {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-sm transition-all outline-none focus:ring-2 focus:ring-teal-600/20 focus:bg-white focus:border-teal-600/10"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-sm transition-all outline-none focus:ring-2 focus:ring-emerald-600/20 focus:bg-white focus:border-emerald-600/10"
                       placeholder="admin@hospital.com"
                     />
                   </div>
@@ -102,7 +102,7 @@ export const AdminSetup = ({ onRegister, onCancel }) => {
                       name="adminKey"
                       value={formData.adminKey}
                       onChange={handleInputChange}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-sm transition-all outline-none focus:ring-2 focus:ring-teal-600/20 focus:bg-white focus:border-teal-600/10"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-sm transition-all outline-none focus:ring-2 focus:ring-emerald-600/20 focus:bg-white focus:border-emerald-600/10"
                       placeholder="Enter system security key"
                     />
                   </div>
@@ -118,7 +118,7 @@ export const AdminSetup = ({ onRegister, onCancel }) => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleInputChange}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-sm transition-all outline-none focus:ring-2 focus:ring-teal-600/20 focus:bg-white focus:border-teal-600/10"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-sm transition-all outline-none focus:ring-2 focus:ring-emerald-600/20 focus:bg-white focus:border-emerald-600/10"
                       placeholder="+1 (555) 000-0000"
                     />
                   </div>
@@ -133,7 +133,7 @@ export const AdminSetup = ({ onRegister, onCancel }) => {
                       name="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-sm transition-all outline-none focus:ring-2 focus:ring-teal-600/20 focus:bg-white focus:border-teal-600/10"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-transparent rounded-2xl text-sm transition-all outline-none focus:ring-2 focus:ring-emerald-600/20 focus:bg-white focus:border-emerald-600/10"
                       placeholder="Admin password"
                     />
                   </div>
@@ -157,7 +157,7 @@ export const AdminSetup = ({ onRegister, onCancel }) => {
                 <button 
                   type="submit"
                   disabled={loading}
-                  className="grow py-4 bg-teal-600 text-white font-bold rounded-2xl shadow-lg shadow-teal-600/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
+                  className="grow py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-lg shadow-emerald-600/20 hover:-translate-y-0.5 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70"
                 >
                   {loading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />

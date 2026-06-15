@@ -13,7 +13,7 @@ import {
 
 const SettingItem = ({ icon: Icon, title, description, badge }) => (
   <button className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-200">
-    <div className="p-3 bg-slate-100 text-slate-500 rounded-xl group-hover:bg-teal-600 group-hover:text-white transition-colors">
+    <div className="p-3 bg-slate-100 text-slate-500 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
       <Icon size={20} />
     </div>
     <div className="flex-1 text-left">
@@ -21,7 +21,7 @@ const SettingItem = ({ icon: Icon, title, description, badge }) => (
       <p className="text-xs text-slate-500">{description}</p>
     </div>
     {badge && (
-      <span className="px-2 py-0.5 bg-teal-600/10 text-teal-600 text-[10px] font-bold rounded-full uppercase tracking-wider">
+      <span className="px-2 py-0.5 bg-emerald-600/10 text-emerald-600 text-[10px] font-bold rounded-full uppercase tracking-wider">
         {badge}
       </span>
     )}
@@ -50,7 +50,7 @@ export const Settings = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1 space-y-4">
           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center">
-            <div className="w-24 h-24 bg-teal-100 rounded-full mx-auto mb-4 flex items-center justify-center text-teal-600 border-4 border-white shadow-md overflow-hidden">
+            <div className="w-24 h-24 bg-emerald-100 rounded-full mx-auto mb-4 flex items-center justify-center text-emerald-600 border-4 border-white shadow-md overflow-hidden">
               {user?.avatar ? (
                 <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
@@ -64,7 +64,7 @@ export const Settings = () => {
             </button>
           </div>
 
-          <div className="bg-teal-600 p-6 rounded-2xl shadow-lg shadow-teal-600/20 text-white overflow-hidden relative">
+          <div className="bg-emerald-600 p-6 rounded-2xl shadow-lg shadow-emerald-600/20 text-white overflow-hidden relative">
             <div className="relative z-10">
               <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-1">System Status</p>
               <h4 className="font-bold text-lg mb-4">All Systems Operational</h4>

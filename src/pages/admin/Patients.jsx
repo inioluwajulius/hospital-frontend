@@ -226,7 +226,7 @@ const Patients = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
-              className="bg-white p-5 rounded-xl border border-slate-200 hover:border-primary/30 hover:shadow-md transition-all group"
+              className="bg-white/80 backdrop-blur-sm p-6 rounded-3xl border border-white/50 hover:border-primary/30 shadow-xl shadow-slate-200/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -484,8 +484,8 @@ const Patients = () => {
 
       <div className="grid grid-cols-12 gap-8">
         <div className="col-span-12 lg:col-span-3 space-y-6">
-          <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
-            <h3 className="text-lg font-bold mb-4 text-slate-900">Directory Filters</h3>
+          <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl border border-white/50 shadow-xl shadow-slate-200/40">
+            <h3 className="text-sm font-black mb-5 text-slate-900 uppercase tracking-widest">Directory Filters</h3>
             <div className="space-y-6">
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Gender</label>
@@ -561,12 +561,12 @@ const Patients = () => {
             </button>
           </div>
 
-          <section className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm">
-            <div className="p-6 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="relative w-full md:w-96">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <section className="bg-white/80 backdrop-blur-md rounded-3xl overflow-hidden border border-white/50 shadow-xl shadow-slate-200/30">
+            <div className="p-6 border-b border-slate-200/50 flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="relative w-full md:w-96 group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" size={18} />
                 <input 
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none" 
+                  className="w-full pl-12 pr-4 py-3 bg-slate-100/50 border border-transparent focus:border-primary/20 rounded-2xl text-sm focus:ring-4 focus:ring-primary/10 transition-all outline-none font-medium text-slate-700" 
                   placeholder="Search by name, ID, phone, or email..." 
                   type="text"
                   value={searchQuery}
@@ -574,8 +574,8 @@ const Patients = () => {
                 />
               </div>
               <div className="flex gap-2">
-                <button className="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-slate-100 transition-all">
-                  <Filter size={18} />
+                <button className="p-3 bg-slate-100/80 text-slate-500 rounded-2xl hover:bg-slate-200 hover:text-slate-700 transition-all active:scale-95 shadow-sm">
+                  <Filter size={20} />
                 </button>
               </div>
             </div>

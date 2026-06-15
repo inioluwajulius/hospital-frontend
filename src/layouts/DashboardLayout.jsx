@@ -5,7 +5,6 @@ import { Header } from '../component/Header';
 import { Footer } from '../component/Footer';
 
 const DashboardLayout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   // Lazy initialize user from localStorage to avoid setState in effect
   const [user] = useState(() => {
     try {
@@ -21,15 +20,16 @@ const DashboardLayout = () => {
   if (!user) return <Navigate to="/login" replace />;
 
   return (
-    <div className="flex min-h-screen bg-gray-50 flex-col">
-      <Header user={user} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-      <div className="flex flex-1">
+    <div className="flex h-screen bg-slate-50 flex-col font-sans text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 relative">
+      <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-emerald-500/10 via-emerald-500/5 to-transparent pointer-events-none z-0"></div>
+      <Header user={user} />
+      <div className="flex flex-1 overflow-hidden relative z-10">
         <Sidebar />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden relative scroll-smooth p-4 md:p-8">
           <Outlet />
         </main>
       </div>
-      <Footer />
+      {/* <Footer /> optional or adjust if needed */}
     </div>
   );
 };

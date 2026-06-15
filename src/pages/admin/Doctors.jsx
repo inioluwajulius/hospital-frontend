@@ -136,37 +136,49 @@ const Doctors = ({ showNotification } = {}) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Doctors</h3>
-            <Stethoscope className="text-primary" size={20} />
+        <motion.div whileHover={{ y: -4 }} className="bg-white/70 backdrop-blur-xl p-6 rounded-3xl border border-white/40 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+          <div className="flex items-center justify-between mb-4 relative z-10">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Total Doctors</h3>
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <Stethoscope size={20} />
+            </div>
           </div>
-          <p className="text-2xl font-extrabold text-slate-900">{doctors.length}</p>
-        </div>
+          <p className="text-3xl font-black text-slate-900 relative z-10">{doctors.length}</p>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Available</h3>
-            <CheckCircle2 className="text-emerald-600" size={20} />
+        <motion.div whileHover={{ y: -4 }} className="bg-white/70 backdrop-blur-xl p-6 rounded-3xl border border-white/40 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+          <div className="flex items-center justify-between mb-4 relative z-10">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Available</h3>
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+              <CheckCircle2 size={20} />
+            </div>
           </div>
-          <p className="text-2xl font-extrabold text-slate-900">{doctors.filter(d => d.availability === 'Available').length}</p>
-        </div>
+          <p className="text-3xl font-black text-slate-900 relative z-10">{doctors.filter(d => d.availability === 'Available').length}</p>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Departments</h3>
-            <Badge className="text-blue-600" size={20} />
+        <motion.div whileHover={{ y: -4 }} className="bg-white/70 backdrop-blur-xl p-6 rounded-3xl border border-white/40 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+          <div className="flex items-center justify-between mb-4 relative z-10">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Departments</h3>
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+              <Badge size={20} />
+            </div>
           </div>
-          <p className="text-2xl font-extrabold text-slate-900">{new Set(doctors.map(d => d.department)).size}</p>
-        </div>
+          <p className="text-3xl font-black text-slate-900 relative z-10">{new Set(doctors.map(d => d.department)).size}</p>
+        </motion.div>
 
-        <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Specializations</h3>
-            <Award className="text-amber-600" size={20} />
+        <motion.div whileHover={{ y: -4 }} className="bg-white/70 backdrop-blur-xl p-6 rounded-3xl border border-white/40 shadow-xl shadow-slate-200/40 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+          <div className="flex items-center justify-between mb-4 relative z-10">
+            <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Specializations</h3>
+            <div className="w-10 h-10 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
+              <Award size={20} />
+            </div>
           </div>
-          <p className="text-2xl font-extrabold text-slate-900">{new Set(doctors.map(d => d.specialization)).size}</p>
-        </div>
+          <p className="text-3xl font-black text-slate-900 relative z-10">{new Set(doctors.map(d => d.specialization)).size}</p>
+        </motion.div>
       </div>
 
       <AnimatePresence>
@@ -349,18 +361,18 @@ const Doctors = ({ showNotification } = {}) => {
 
       <div className="grid grid-cols-12 gap-8">
         <div className="col-span-12 lg:col-span-3 space-y-6">
-          <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-            <h3 className="text-lg font-bold mb-4 text-slate-900">Filter by Department</h3>
+          <div className="bg-white/80 backdrop-blur-md p-6 rounded-3xl border border-white/50 shadow-xl shadow-slate-200/40">
+            <h3 className="text-sm font-black mb-5 text-slate-900 uppercase tracking-widest">Filter by Department</h3>
             <div className="space-y-2">
               {['All', ...departments].map((dept) => (
                 <button
                   key={dept}
                   onClick={() => setDepartmentFilter(dept)}
                   className={cn(
-                    "w-full text-left px-4 py-2.5 rounded-xl transition-all font-medium text-sm",
+                    "w-full text-left px-4 py-3 rounded-2xl transition-all font-bold text-sm border",
                     departmentFilter === dept 
-                      ? "bg-primary text-white" 
-                      : "bg-slate-50 text-slate-700 hover:bg-slate-100"
+                      ? "bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105" 
+                      : "bg-slate-50 text-slate-600 border-transparent hover:bg-white hover:border-slate-200 hover:shadow-sm"
                   )}
                 >
                   {dept}
@@ -382,58 +394,62 @@ const Doctors = ({ showNotification } = {}) => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredDoctors.slice(0, 12).map((doctor, idx) => (
-              <motion.div 
-                key={doctor.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="bg-white rounded-3xl p-6 border border-slate-100 hover:border-primary/30 shadow-sm hover:shadow-lg transition-all group"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center text-lg font-bold group-hover:scale-110 transition-transform">
-                    {doctor.name?.charAt(0)}
-                  </div>
-                  <span className={cn(
-                    "px-3 py-1 rounded-full text-[10px] font-bold uppercase",
-                    doctor.availability === 'Available' ? 'bg-emerald-100 text-emerald-600' :
-                    doctor.availability === 'On Leave' ? 'bg-amber-100 text-amber-600' :
-                    'bg-blue-100 text-blue-600'
-                  )}>
-                    {doctor.availability}
-                  </span>
-                </div>
-
-                <h4 className="font-bold text-slate-900 mb-1 text-lg">{doctor.name}</h4>
-                <p className="text-sm text-primary font-semibold mb-4">{doctor.specialization}</p>
-
-                <div className="space-y-2.5 mb-4">
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <Badge size={14} />
-                    {doctor.department}
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <Clock size={14} />
-                    {doctor.experience} years experience
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-slate-600">
-                    <Mail size={14} />
-                    {doctor.email}
-                  </div>
-                  {doctor.phone && (
-                    <div className="flex items-center gap-2 text-xs text-slate-600">
-                      <Phone size={14} />
-                      {doctor.phone}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <AnimatePresence>
+              {filteredDoctors.slice(0, 12).map((doctor, idx) => (
+                <motion.div 
+                  layout
+                  key={doctor.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/50 hover:border-primary/30 shadow-xl shadow-slate-200/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <div className="flex items-start justify-between mb-5">
+                    <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center text-2xl font-black group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-inner">
+                      {doctor.name?.charAt(0)}
                     </div>
-                  )}
-                </div>
+                    <span className={cn(
+                      "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                      doctor.availability === 'Available' ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50' :
+                      doctor.availability === 'On Leave' ? 'bg-amber-50 text-amber-600 border-amber-200/50' :
+                      'bg-blue-50 text-blue-600 border-blue-200/50'
+                    )}>
+                      {doctor.availability}
+                    </span>
+                  </div>
 
-                <button className="w-full py-2 bg-primary/10 text-primary rounded-xl font-bold text-sm hover:bg-primary hover:text-white transition-all">
-                  View Profile
-                </button>
-              </motion.div>
-            ))}
+                  <h4 className="font-extrabold text-slate-900 mb-1 text-xl">{doctor.name}</h4>
+                  <p className="text-sm text-primary font-bold mb-5 bg-primary/5 inline-block px-2 py-1 rounded-lg">{doctor.specialization}</p>
+
+                  <div className="space-y-3 mb-6 bg-slate-50/50 p-4 rounded-2xl">
+                    <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
+                      <Badge size={16} className="text-slate-400" />
+                      {doctor.department}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
+                      <Clock size={16} className="text-slate-400" />
+                      {doctor.experience} years experience
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-slate-600 font-medium truncate">
+                      <Mail size={16} className="text-slate-400 shrink-0" />
+                      <span className="truncate">{doctor.email}</span>
+                    </div>
+                    {doctor.phone && (
+                      <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
+                        <Phone size={16} className="text-slate-400" />
+                        {doctor.phone}
+                      </div>
+                    )}
+                  </div>
+
+                  <button className="w-full py-3 bg-slate-50 text-slate-600 border border-slate-200 rounded-2xl font-bold text-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 active:scale-95 shadow-sm">
+                    View Profile
+                  </button>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
       </div>

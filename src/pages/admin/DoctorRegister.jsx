@@ -95,7 +95,7 @@ const DoctorRegister = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-slate-50 to-indigo-100 px-4 py-10">
+        <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-slate-50 to-emerald-100 px-4 py-10">
             <Motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

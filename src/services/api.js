@@ -88,6 +88,7 @@ export const getPatient = (id) => API.get(`/patients/${id}`);
 export const getDoctors = () => API.get("/doctors");
 export const getDoctor = (id) => API.get(`/doctors/${id}`);
 export const getMe = () => API.get("/auth/me");
+export const getNotifications = () => API.get("/notifications");
 
 // GET methods - Legacy Endpoints (backward compatibility)
 export const getAppointments = () => API_LEGACY.get("/appointments");
@@ -127,6 +128,8 @@ export const createRecord = (data) => API_LEGACY.post("/medical-records", data);
 // UPDATE methods - V1 Endpoints
 export const updatePatient = (id, data) => API.put(`/patients/${id}`, data);
 export const updateDoctor = (id, data) => API.put(`/doctors/${id}`, data);
+export const markNotificationAsRead = (id) => API.patch(`/notifications/${id}/read`);
+export const markAllNotificationsAsRead = () => API.patch("/notifications/read-all");
 
 // UPDATE methods - Legacy Endpoints
 export const updateAppointment = (id, data) => API_LEGACY.put(`/appointments/${id}`, data);
@@ -184,6 +187,7 @@ export const api = {
     getAuditLogs,
     getMe,
     getHealth,
+    getNotifications,
     // POST methods
     createPatient,
     createAppointment,
@@ -204,6 +208,8 @@ export const api = {
     updateLabTest,
     updateDoctor,
     updatePrescription,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
     updateDrug,
     updateRadiologyExam,
     updateInvoice,

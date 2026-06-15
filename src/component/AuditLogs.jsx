@@ -91,7 +91,7 @@ export const AuditLogs = ({ showNotification }) => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3">
-        <Loader2 className="w-8 h-8 text-teal-600 animate-spin" />
+        <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
         <p className="text-sm text-slate-500 font-medium">Loading system audit trail...</p>
       </div>
     );
@@ -107,7 +107,7 @@ export const AuditLogs = ({ showNotification }) => {
         </div>
         <button 
           onClick={handleExport}
-          className="flex items-center gap-2 px-6 py-3 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition-colors"
+          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors"
         >
           <Download size={18} />
           Export Logs
@@ -124,7 +124,7 @@ export const AuditLogs = ({ showNotification }) => {
               placeholder="Search logs by action, user, or module..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-600/20"
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-600/20"
             />
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -132,7 +132,7 @@ export const AuditLogs = ({ showNotification }) => {
               onClick={() => setActiveTab('all')}
               className={`px-4 py-2 rounded-lg font-bold transition-all ${
                 activeTab === 'all' 
-                  ? 'bg-teal-600 text-white' 
+                  ? 'bg-emerald-600 text-white' 
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -142,7 +142,7 @@ export const AuditLogs = ({ showNotification }) => {
               onClick={() => setActiveTab('security')}
               className={`px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2 ${
                 activeTab === 'security' 
-                  ? 'bg-teal-600 text-white' 
+                  ? 'bg-emerald-600 text-white' 
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >

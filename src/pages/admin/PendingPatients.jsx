@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, AlertCircle, RefreshCw, Users, Stethoscope } from 'lucide-react';
 import { api } from '../../services/api';
 
 const PendingApprovals = () => {
+  const [activeTab, setActiveTab] = useState('doctors');
   const [doctors, setDoctors] = useState([]);
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -149,11 +150,38 @@ const PendingApprovals = () => {
         </div>
       )}
 
+      {/* TABS */}
+      <div className="flex gap-8 border-b border-slate-200 mb-6">
+        <button
+          onClick={() => setActiveTab('doctors')}
+          className={`pb-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+            activeTab === 'doctors' 
+              ? 'border-emerald-600 text-emerald-600' 
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Stethoscope size={18} />
+          Doctor Registrations ({doctors.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('patients')}
+          className={`pb-4 text-sm font-bold border-b-2 transition-all flex items-center gap-2 ${
+            activeTab === 'patients' 
+              ? 'border-emerald-600 text-emerald-600' 
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Users size={18} />
+          Patient Registrations ({patients.length})
+        </button>
+      </div>
+
       {/* --- DOCTOR REGISTRATIONS --- */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
-          <h3 className="font-bold text-slate-900">Pending Doctor Registrations</h3>
-          <p className="text-xs text-slate-500 mt-1">
+      {activeTab === 'doctors' && (
+        <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-white/50 shadow-xl shadow-slate-200/30 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="p-6 border-b border-slate-200/50 bg-slate-50/50">
+          <h3 className="font-black text-slate-900 text-lg">Pending Doctor Registrations</h3>
+          <p className="text-xs text-slate-500 mt-1 font-medium">
             {doctors.length} doctor{doctors.length !== 1 ? 's' : ''} awaiting approval
           </p>
         </div>
@@ -189,18 +217,18 @@ const PendingApprovals = () => {
                   </div>
                 </div>
 
-                <div className="mt-4 flex gap-3">
+                <div className="mt-6 flex gap-3">
                   <button
                     onClick={() => handleApproveDoctor(doctor._id)}
                     disabled={approving[doctor._id] || rejecting[doctor._id]}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-sm"
                   >
                     {approving[doctor._id] ? 'Approving...' : 'Approve'}
                   </button>
                   <button
                     onClick={() => handleRejectDoctor(doctor._id)}
                     disabled={rejecting[doctor._id] || approving[doctor._id]}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 text-red-600 rounded-xl hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-sm"
                   >
                     Reject
                   </button>
@@ -210,12 +238,14 @@ const PendingApprovals = () => {
           </div>
         )}
       </div>
+      )}
 
       {/* --- PATIENT REGISTRATIONS --- */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
-          <h3 className="font-bold text-slate-900">Pending Patient Registrations</h3>
-          <p className="text-xs text-slate-500 mt-1">
+      {activeTab === 'patients' && (
+        <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-white/50 shadow-xl shadow-slate-200/30 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div className="p-6 border-b border-slate-200/50 bg-slate-50/50">
+          <h3 className="font-black text-slate-900 text-lg">Pending Patient Registrations</h3>
+          <p className="text-xs text-slate-500 mt-1 font-medium">
             {patients.length} patient{patients.length !== 1 ? 's' : ''} awaiting approval
           </p>
         </div>
@@ -253,18 +283,18 @@ const PendingApprovals = () => {
                   </div>
                 </div>
 
-                <div className="mt-4 flex gap-3">
+                <div className="mt-6 flex gap-3">
                   <button
                     onClick={() => handleApprovePatient(patient._id)}
                     disabled={approving[patient._id] || rejecting[patient._id]}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-sm"
                   >
                     {approving[patient._id] ? 'Approving...' : 'Approve'}
                   </button>
                   <button
                     onClick={() => handleRejectPatient(patient._id)}
                     disabled={rejecting[patient._id] || approving[patient._id]}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 text-red-600 rounded-xl hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-sm"
                   >
                     Reject
                   </button>
@@ -274,6 +304,7 @@ const PendingApprovals = () => {
           </div>
         )}
       </div>
+      )}
     </div>
   );
 };

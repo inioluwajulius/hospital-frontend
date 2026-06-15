@@ -63,12 +63,16 @@ const Billing = ({ showNotification } = {}) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [invoicesData, patientsData] = await Promise.all([
-          api.getInvoices?.() || Promise.resolve([]),
+        const [invoicesResponse, patientsResponse] = await Promise.all([
+          api.getInvoices?.() || Promise.resolve({ data: [] }),
           api.getPatients()
         ]);
-        setInvoices(invoicesData || []);
-        setPatients(patientsData || []);
+        
+        const invoicesList = invoicesResponse?.data || invoicesResponse || [];
+        const patientsList = patientsResponse?.data || patientsResponse || [];
+        
+        setInvoices(Array.isArray(invoicesList) ? invoicesList : []);
+        setPatients(Array.isArray(patientsList) ? patientsList : []);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
