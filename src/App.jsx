@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
 
 // Auth Pages
@@ -42,6 +43,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <Analytics />
       <Routes>
         {/* Root redirect */}
         <Route path="/" element={<Navigate to="/register" replace />} />
