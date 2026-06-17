@@ -114,8 +114,16 @@ const Patients = () => {
       });
       setRegistrationSuccess(true);
       
-      const updatedPatients = await api.getPatients();
-      setPatients(updatedPatients?.data || updatedPatients);
+      const updatedRes = await api.getPatients();
+      const responseData = updatedRes?.data;
+      const patientsList = responseData?.data || responseData || [];
+      const formattedPatients = Array.isArray(patientsList) ? patientsList.map(p => ({
+          ...p,
+          id: p._id || p.id,
+          name: p.userId?.name || p.name,
+          email: p.userId?.email || p.email,
+      })) : [];
+      setPatients(formattedPatients);
 
       setTimeout(() => {
         setIsRegisterModalOpen(false);
@@ -141,8 +149,16 @@ const Patients = () => {
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const data = await api.getPatients();
-        setPatients(data?.data || data || []);
+        const res = await api.getPatients();
+        const responseData = res?.data;
+        const patientsList = responseData?.data || responseData || [];
+        const formattedPatients = Array.isArray(patientsList) ? patientsList.map(p => ({
+            ...p,
+            id: p._id || p.id,
+            name: p.userId?.name || p.name,
+            email: p.userId?.email || p.email,
+        })) : [];
+        setPatients(formattedPatients);
       } catch (error) {
         console.error('Error fetching patients:', error);
         setPatients([]);

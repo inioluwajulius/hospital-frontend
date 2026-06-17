@@ -20,12 +20,6 @@ export const AdminSetup = ({ onRegister, onCancel }) => {
       return;
     }
 
-    // Mock validation for admin key
-    if (formData.adminKey !== 'HOSPITAL-ADMIN-2024') {
-      setError('Invalid Admin Security Key. Please contact system owner.');
-      return;
-    }
-
     setLoading(true);
     setError(null);
     try {

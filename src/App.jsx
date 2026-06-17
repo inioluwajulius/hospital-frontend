@@ -13,7 +13,12 @@ import VerifyEmail from "./pages/auth/VerifyEmail";
 import DoctorRegister from "./pages/admin/DoctorRegister";
 import AdminDoctors from "./pages/admin/Doctors";
 import AdminPatients from "./pages/admin/Patients";
-import AdminPendingDoctors from "./pages/admin/PendingPatients";
+import AdminPendingDoctors from "./pages/admin/PendingApprovals";
+
+// Super Admin Pages
+import SuperAdminDashboard from "./pages/superadmin/Dashboard";
+import SuperAdminHospitals from "./pages/superadmin/Hospitals";
+import SuperAdminCreateHospital from "./pages/superadmin/CreateHospital";
 
 // Doctor Pages
 import DoctorDashboard from "./pages/doctor/Dashboard";
@@ -73,6 +78,13 @@ function App() {
           <Route path="/admin/pending-approvals" element={<ProtectedRoute requiredRole="admin"><AdminPendingDoctors /></ProtectedRoute>} />
           <Route path="/admin/audit-logs" element={<ProtectedRoute requiredRole="admin"><AuditLogs /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><Settings /></ProtectedRoute>} />
+        </Route>
+
+        {/* ========== SUPER ADMIN ROUTES ========== */}
+        <Route element={<DashboardLayout />}>
+          <Route path="/superadmin/dashboard" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
+          <Route path="/superadmin/hospitals" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminHospitals /></ProtectedRoute>} />
+          <Route path="/superadmin/hospitals/new" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminCreateHospital /></ProtectedRoute>} />
         </Route>
 
         {/* ========== DOCTOR ROUTES ========== */}

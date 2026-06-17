@@ -1,12 +1,6 @@
 import axios from "axios";
 
-// Determine base URL based on environment
 const getBaseURL = () => {
-    // In production (Vercel), use relative URLs
-    if (import.meta.env.PROD) {
-        return "/api/v1";
-    }
-    // In development, use localhost
     return import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
 };
 

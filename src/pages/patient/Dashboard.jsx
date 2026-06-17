@@ -45,10 +45,10 @@ const PatientDashboard = () => {
         api.getInvoices()
       ]);
 
-      const appointments = aptRes.data || [];
-      const prescriptions = presRes.data || [];
-      const records = recordsRes.data || [];
-      const bills = billsRes.data || [];
+      const appointments = aptRes.data?.data || aptRes.data || [];
+      const prescriptions = presRes.data?.data || presRes.data || [];
+      const records = recordsRes.data?.data || recordsRes.data || [];
+      const bills = billsRes.data?.data || billsRes.data || [];
 
       // Calculate stats
       const upcomingApts = appointments.filter(a => new Date(a.appointmentDate) >= new Date() && a.status !== 'cancelled');

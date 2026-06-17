@@ -48,7 +48,7 @@ const PatientPrescriptions = () => {
   const fetchPrescriptions = async () => {
     try {
       const res = await api.getPrescriptions();
-      setPrescriptions(res.data || []);
+      setPrescriptions(res.data?.data || res.data || []);
     } catch (err) {
       console.error(err);
     }

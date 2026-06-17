@@ -104,8 +104,8 @@ const PatientAppointments = () => {
         api.getAppointments(),
         api.getDoctors()
       ]);
-      setAppointments(aptRes.data || []);
-      setDoctors(docRes.data || []);
+      setAppointments(aptRes.data?.data || aptRes.data || []);
+      setDoctors(docRes.data?.data || docRes.data || []);
     } catch (err) {
       console.error(err);
     }

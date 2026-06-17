@@ -4,7 +4,7 @@ import BrandLogo from "./BrandLogo";
 import { 
   Users, UserCheck, ClipboardList, Settings,
   LayoutDashboard, Calendar, Pill, FolderHeart, Microscope, Activity,
-  CreditCard, ShoppingCart, LogOut, Menu, X, User
+  CreditCard, ShoppingCart, LogOut, Menu, X, User, Building2
 } from "lucide-react";
 
 const Sidebar = () => {
@@ -39,7 +39,14 @@ const Sidebar = () => {
   const userRole = user?.role?.toLowerCase() || '';
 
   let items = [];
-  if (userRole === 'hospital_admin' || userRole === 'super_admin' || userRole === 'admin') {
+  if (userRole === 'super_admin') {
+    items = [
+      { label: "Platform Overview", path: "/superadmin/dashboard", icon: <LayoutDashboard size={20} /> },
+      { label: "Manage Hospitals", path: "/superadmin/hospitals", icon: <Building2 size={20} /> },
+      { label: "Platform Logs", path: "/admin/audit-logs", icon: <ClipboardList size={20} /> },
+      { label: "Settings", path: "/admin/settings", icon: <Settings size={20} /> },
+    ];
+  } else if (userRole === 'hospital_admin' || userRole === 'admin') {
     items = [
       { label: "Doctors", path: "/admin/doctors", icon: <Users size={20} /> },
       { label: "Patients", path: "/admin/patients", icon: <User size={20} /> },

@@ -66,7 +66,7 @@ const PatientMedicalRecords = () => {
   const fetchRecords = async () => {
     try {
       const res = await api.getMedicalRecords();
-      setRecords(res.data || []);
+      setRecords(res.data?.data || res.data || []);
     } catch (err) {
       console.error(err);
     }

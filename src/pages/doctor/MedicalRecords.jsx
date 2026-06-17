@@ -46,11 +46,11 @@ const MedicalRecords = ({ showNotification } = {}) => {
     const fetchData = async () => {
       try {
         const [recordsData, patientsData] = await Promise.all([
-          api.getRecords?.() || Promise.resolve([]),
+          api.getMedicalRecords?.() || api.getRecords?.() || Promise.resolve([]),
           api.getPatients()
         ]);
-        setRecords(recordsData || []);
-        setPatients(patientsData || []);
+        setRecords(recordsData?.data?.data || recordsData?.data || []);
+        setPatients(patientsData?.data?.data || patientsData?.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -81,14 +81,18 @@ const MedicalRecords = ({ showNotification } = {}) => {
 
     setIsSubmitting(true);
     try {
-      await api.createRecord?.(formData);
+      if (api.createMedicalRecord) {
+        await api.createMedicalRecord(formData);
+      } else {
+        await api.createRecord?.(formData);
+      }
       setSuccess(true);
       if (showNotification) {
         showNotification('Medical record created successfully!', 'success');
       }
 
-      const updatedRecords = await api.getRecords?.() || [];
-      setRecords(updatedRecords);
+      const updatedRecords = await (api.getMedicalRecords?.() || api.getRecords?.() || Promise.resolve([]));
+      setRecords(updatedRecords?.data?.data || updatedRecords?.data || []);
 
       setTimeout(() => {
         setIsModalOpen(false);
@@ -121,19 +125,27 @@ const MedicalRecords = ({ showNotification } = {}) => {
     }
   };
 
-  const filteredRecords = records.filter(record => {
+  const processedRecords = records.map(r => ({
+    ...r,
+    patientName: r.patientId?.userId?.name || r.patientId?.name || 'Unknown',
+    doctorName: r.doctorId?.name || 'Unknown',
+    patientIdStr: r.patientId?._id || r.patientId?.id || r.patientId,
+    date: r.createdAt ? new Date(r.createdAt).toLocaleDateString() : 'Pending'
+  }));
+
+  const filteredRecords = processedRecords.filter(record => {
     const matchesSearch =
       record.patientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.chiefComplaint?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.diagnosis?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesPatient = !selectedPatient || record.patientId === selectedPatient;
+    const matchesPatient = !selectedPatient || record.patientIdStr === selectedPatient;
 
     return matchesPatient && matchesSearch;
   });
 
   const patientRecords = selectedPatient 
-    ? records.filter(r => r.patientId === selectedPatient)
+    ? processedRecords.filter(r => r.patientIdStr === selectedPatient)
     : [];
 
   if (loading) {

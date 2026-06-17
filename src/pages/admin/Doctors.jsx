@@ -45,8 +45,10 @@ const Doctors = ({ showNotification } = {}) => {
     const fetchData = async () => {
       try {
         const res = await api.getDoctors?.();
-        const data = res?.data || res || [];
-        setDoctors(data);
+        const responseData = res?.data;
+        const data = responseData?.data || responseData || [];
+        // Ensure it's an array
+        setDoctors(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching doctors:', error);
       } finally {
@@ -75,8 +77,9 @@ const Doctors = ({ showNotification } = {}) => {
       }
 
       const updatedRes = await api.getDoctors?.();
-      const updatedDoctors = updatedRes?.data || updatedRes || [];
-      setDoctors(updatedDoctors);
+      const responseData = updatedRes?.data;
+      const updatedDoctors = responseData?.data || responseData || [];
+      setDoctors(Array.isArray(updatedDoctors) ? updatedDoctors : []);
 
       setTimeout(() => {
         setIsModalOpen(false);
@@ -430,7 +433,7 @@ const Doctors = ({ showNotification } = {}) => {
                     </div>
                     <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
                       <Clock size={16} className="text-slate-400" />
-                      {doctor.experience} years experience
+                      {doctor.yearsOfExperience || 0} years experience
                     </div>
                     <div className="flex items-center gap-3 text-xs text-slate-600 font-medium truncate">
                       <Mail size={16} className="text-slate-400 shrink-0" />

@@ -70,12 +70,12 @@ const Appointments = ({ showNotification } = {}) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [aptData, patientData] = await Promise.all([
+        const [aptRes, patientRes] = await Promise.all([
           api.getAppointments(),
           api.getPatients()
         ]);
-        setAppointments(aptData);
-        setPatients(patientData);
+        setAppointments(aptRes.data?.data || aptRes.data || []);
+        setPatients(patientRes.data?.data || patientRes.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -113,11 +113,22 @@ const Appointments = ({ showNotification } = {}) => {
 
     setIsSubmitting(true);
     try {
-      await api.createAppointment(formData);
+      // Convert date and time to appointmentDate
+      const dateTimeString = `${formData.date} ${formData.time}`;
+      const appointmentDate = new Date(dateTimeString);
+
+      const payload = {
+        patientId: formData.patientId,
+        appointmentDate: appointmentDate.toISOString(),
+        type: formData.type,
+        reason: formData.reason
+      };
+
+      await api.createAppointment(payload);
       setBookingSuccess(true);
       
       const updatedApts = await api.getAppointments();
-      setAppointments(updatedApts);
+      setAppointments(updatedApts.data || []);
 
       setTimeout(() => {
         setIsBookingModalOpen(false);
@@ -140,10 +151,24 @@ const Appointments = ({ showNotification } = {}) => {
     }
   };
 
-  const filteredAppointments = appointments.filter(apt => {
+  const processedAppointments = appointments.map(apt => {
+    const pName = apt.patientId?.userId?.name || apt.patientId?.name || 'Unknown';
+    const dName = apt.doctorId?.name || 'Unknown';
+    const dateObj = new Date(apt.appointmentDate);
+    const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    return {
+      ...apt,
+      patientName: pName,
+      doctorName: dName,
+      time: timeStr
+    };
+  });
+
+  const filteredAppointments = processedAppointments.filter(apt => {
     const matchesSearch = 
-      apt.patientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      apt.doctorName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      apt.patientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      apt.doctorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       apt.type?.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesType = typeFilter === 'All' || apt.type === typeFilter;

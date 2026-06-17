@@ -74,9 +74,9 @@ const Dashboard = () => {
           api.getAppointments(),
           api.getInvoices()
         ]);
-        setPatients(pRes.data || []);
-        setAppointments(aRes.data || []);
-        setInvoices(iRes.data || []);
+        setPatients(pRes.data?.data || pRes.data || []);
+        setAppointments(aRes.data?.data || aRes.data || []);
+        setInvoices(iRes.data?.data || iRes.data || []);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
         // Continue with empty data instead of crashing
@@ -225,17 +225,23 @@ const Dashboard = () => {
           <h3 className="font-bold text-slate-900 mb-6">Upcoming Appointments</h3>
           <div className="space-y-4">
             {upcomingAppointments.length > 0 ? (
-              upcomingAppointments.map((apt, i) => (
-                <div key={i} className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-primary/20 transition-all">
-                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-bold text-xs">
-                    {i + 1}
+              upcomingAppointments.map((apt, i) => {
+                const patientName = apt.patientId?.userId?.name || apt.patientId?.name || 'Unknown Patient';
+                const dateObj = new Date(apt.appointmentDate);
+                const timeString = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                return (
+                  <div key={apt._id || i} className="flex items-center gap-4 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-primary/20 transition-all">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary font-bold text-xs">
+                      {i + 1}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm font-bold text-slate-900">{patientName}</div>
+                      <div className="text-xs text-slate-400">{dateObj.toLocaleDateString()} at {timeString}</div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-bold text-slate-900">{apt.patientName}</div>
-                    <div className="text-xs text-slate-400">{apt.time || 'Scheduled'}</div>
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="text-center py-6 text-slate-400 text-sm">
                 No upcoming appointments

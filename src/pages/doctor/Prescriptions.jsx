@@ -52,8 +52,8 @@ const Prescriptions = ({ showNotification } = {}) => {
           api.getPrescriptions?.() || Promise.resolve([]),
           api.getPatients()
         ]);
-        setPrescriptions(presData?.data || presData || []);
-        setPatients(patientData?.data || patientData || []);
+        setPrescriptions(presData?.data?.data || presData?.data || []);
+        setPatients(patientData?.data?.data || patientData?.data || []);
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load prescriptions');
@@ -98,9 +98,24 @@ const Prescriptions = ({ showNotification } = {}) => {
 
     setIsSubmitting(true);
     try {
-      await api.createPrescription(formData);
+      const payload = {
+        patientId: formData.patientId,
+        medications: [{
+          name: formData.medicationName,
+          dosage: formData.dosage,
+          frequency: formData.frequency,
+          duration: formData.duration,
+          instructions: formData.instructions
+        }],
+        notes: ''
+      };
+
+      await api.createPrescription(payload);
       setSuccess(true);
       
+      const updatedPresData = await api.getPrescriptions();
+      setPrescriptions(updatedPresData?.data?.data || updatedPresData?.data || []);
+
       setTimeout(() => {
         setIsModalOpen(false);
         setSuccess(false);
@@ -124,7 +139,21 @@ const Prescriptions = ({ showNotification } = {}) => {
     }
   };
 
-  const filteredPrescriptions = prescriptions.filter(prescription => {
+  const processedPrescriptions = prescriptions.map(pres => {
+    const med = pres.medications && pres.medications[0] ? pres.medications[0] : {};
+    return {
+      ...pres,
+      patientName: pres.patientId?.userId?.name || pres.patientId?.name || 'Unknown Patient',
+      doctorName: pres.doctorId?.name || 'Unknown Doctor',
+      medicationName: med.name || 'N/A',
+      dosage: med.dosage || 'N/A',
+      frequency: med.frequency || 'N/A',
+      duration: med.duration || 'N/A',
+      instructions: med.instructions || ''
+    };
+  });
+
+  const filteredPrescriptions = processedPrescriptions.filter(prescription => {
     const matchesSearch = 
       prescription.patientName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       prescription.medicationName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
