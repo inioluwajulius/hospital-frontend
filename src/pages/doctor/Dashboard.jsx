@@ -36,7 +36,7 @@ const StatCard = ({ title, value, icon: _Icon, trend, trendValue, color }) => (
   <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex justify-between items-start mb-4">
       <div className={cn("p-3 rounded-xl", color)}>
-        <Icon size={24} className="text-white" />
+        <_Icon size={24} className="text-white" />
       </div>
       <button className="text-slate-400 hover:text-slate-600">
         <MoreVertical size={20} />
@@ -95,15 +95,23 @@ const Dashboard = () => {
     .filter(a => a.status === 'Scheduled')
     .slice(0, 5);
 
-  const chartData = [
-    { name: 'Mon', patients: 45, appointments: 32 },
-    { name: 'Tue', patients: 52, appointments: 40 },
-    { name: 'Wed', patients: 48, appointments: 35 },
-    { name: 'Thu', patients: 61, appointments: 45 },
-    { name: 'Fri', patients: 55, appointments: 38 },
-    { name: 'Sat', patients: 30, appointments: 20 },
-    { name: 'Sun', patients: 25, appointments: 15 },
-  ];
+  const chartData = React.useMemo(() => {
+    const data = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dayStr = d.toLocaleDateString('en-US', { weekday: 'short' });
+      
+      // Count patients registered on this day
+      const pts = patients.filter(p => p.createdAt && new Date(p.createdAt).toDateString() === d.toDateString()).length;
+      // Count appointments on this day
+      const apts = appointments.filter(a => a.date && new Date(a.date).toDateString() === d.toDateString()).length;
+      
+      data.push({ name: dayStr, patients: pts, appointments: apts });
+    }
+    return data;
+  }, [patients, appointments]);
 
   if (loading) {
     return (

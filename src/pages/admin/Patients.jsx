@@ -34,6 +34,8 @@ const Patients = () => {
   const [activePatientTab, setActivePatientTab] = useState('all');
   const [genderFilter, setGenderFilter] = useState('All');
   const [statusFilters, setStatusFilters] = useState(['Active']);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -592,7 +594,7 @@ const Patients = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {filteredPatients.slice(0, 10).map((patient) => (
+                  {filteredPatients.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((patient) => (
                     <tr key={patient.id} className="hover:bg-slate-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -628,7 +630,10 @@ const Patients = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <button className="text-slate-300 hover:text-primary transition-colors">
+                        <button 
+                          onClick={() => alert('View Profile functionality coming soon')}
+                          className="text-slate-300 hover:text-primary transition-colors"
+                        >
                           <ChevronRight size={18} />
                         </button>
                       </td>
@@ -637,6 +642,31 @@ const Patients = () => {
                 </tbody>
               </table>
             </div>
+            
+            {/* Pagination Controls */}
+            {filteredPatients.length > 0 && (
+              <div className="p-4 border-t border-slate-200/50 flex justify-between items-center bg-slate-50/30">
+                <span className="text-xs font-semibold text-slate-500">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredPatients.length)} of {filteredPatients.length} entries
+                </span>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors"
+                  >
+                    Previous
+                  </button>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(filteredPatients.length / itemsPerPage), p + 1))}
+                    disabled={currentPage === Math.ceil(filteredPatients.length / itemsPerPage)}
+                    className="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-bold text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
         </div>
       </div>

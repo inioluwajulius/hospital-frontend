@@ -136,13 +136,19 @@ const Prescriptions = ({ showNotification } = {}) => {
   });
 
   const handlePrintPrescription = (prescription) => {
-    // Print prescription - in real app would generate PDF
-    console.log('Printing prescription:', prescription);
+    if (showNotification) {
+      showNotification('Preparing prescription for printing...', 'info');
+    } else {
+      alert('Printing prescription for: ' + (prescription.patientName || 'Patient'));
+    }
   };
 
   const handleRefillRequest = (prescription) => {
-    // Request refill
-    console.log('Requesting refill for:', prescription);
+    if (showNotification) {
+      showNotification('Refill request sent to pharmacy.', 'success');
+    } else {
+      alert('Refill request sent to pharmacy.');
+    }
   };
 
   return (

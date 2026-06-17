@@ -5,6 +5,9 @@ import "./App.css";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import RegistrationSelector from "./pages/RegistrationSelector";
+import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
+import VerifyEmail from "./pages/auth/VerifyEmail";
 
 // Admin Pages
 import DoctorRegister from "./pages/admin/DoctorRegister";
@@ -21,6 +24,10 @@ import DoctorLabTest from "./pages/doctor/LabTest";
 import DoctorRadiology from "./pages/doctor/Radiology";
 
 // Patient Pages
+import PatientDashboard from "./pages/patient/Dashboard";
+import PatientAppointments from "./pages/patient/Appointments";
+import PatientPrescriptions from "./pages/patient/Prescriptions";
+import PatientMedicalRecords from "./pages/patient/MedicalRecords";
 import PatientBilling from "./pages/patient/Billing";
 import PatientPharmacy from "./pages/patient/Pharmacy";
 
@@ -29,7 +36,7 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import { AuditLogs } from "./component/AuditLogs";
 import { Settings } from "./component/Settings";
 import { AdminSetup } from "./component/AdminSetup";
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from "./component/ProtectedRoute";
 
 function App() {
   const handleAdminRegister = async (data) => {
@@ -51,6 +58,9 @@ function App() {
         <Route path="/auth/register/:type" element={<Register />} />
         <Route path="/register" element={<RegistrationSelector />} />
         <Route path="/auth/admin-setup" element={<AdminSetup onRegister={handleAdminRegister} onCancel={handleAdminCancel} />} />
+        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+        <Route path="/auth/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/auth/verify-email/:token" element={<VerifyEmail />} />
         
         {/* ========== ADMIN ROUTES ========== */}
         <Route element={<DashboardLayout />}>
@@ -77,8 +87,13 @@ function App() {
 
         {/* ========== PATIENT ROUTES ========== */}
         <Route element={<DashboardLayout />}>
+          <Route path="/patient/dashboard" element={<ProtectedRoute requiredRole="patient"><PatientDashboard /></ProtectedRoute>} />
+          <Route path="/patient/appointments" element={<ProtectedRoute requiredRole="patient"><PatientAppointments /></ProtectedRoute>} />
+          <Route path="/patient/prescriptions" element={<ProtectedRoute requiredRole="patient"><PatientPrescriptions /></ProtectedRoute>} />
+          <Route path="/patient/medical-records" element={<ProtectedRoute requiredRole="patient"><PatientMedicalRecords /></ProtectedRoute>} />
           <Route path="/patient/billing" element={<ProtectedRoute requiredRole="patient"><PatientBilling /></ProtectedRoute>} />
           <Route path="/patient/pharmacy" element={<ProtectedRoute requiredRole="patient"><PatientPharmacy /></ProtectedRoute>} />
+          <Route path="/patient/settings" element={<ProtectedRoute requiredRole="patient"><Settings /></ProtectedRoute>} />
         </Route>
 
         {/* 404 Fallback */}

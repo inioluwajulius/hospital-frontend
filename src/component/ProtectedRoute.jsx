@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
     // Allow access if no role is required, or user matches the role, or user is admin and admin is required
     const hasAccess = !normalizedRequiredRole || (userRole === normalizedRequiredRole) || (isAdminRequired && isUserAdmin);
 
-    console.log(`[ProtectedRoute Debug] userRole: "${userRole}", requiredRole: "${normalizedRequiredRole}", isUserAdmin: ${isUserAdmin}, isAdminRequired: ${isAdminRequired}, hasAccess: ${hasAccess}`);
+    // Debug log removed
 
     if (!hasAccess) {
         return (

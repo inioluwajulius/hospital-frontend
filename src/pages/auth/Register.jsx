@@ -133,7 +133,7 @@ const Register = () => {
                 }
             }
 
-            console.log('Submitting registration with payload:', payload);
+            // Debug log removed
             await registerUser(payload);
             
             // Redirect after successful registration

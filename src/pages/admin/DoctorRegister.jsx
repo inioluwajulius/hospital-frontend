@@ -82,7 +82,7 @@ const DoctorRegister = () => {
                 yearsOfExperience: parseInt(form.formData.yearsOfExperience),
             };
 
-            console.log('Submitting doctor registration:', payload);
+            // Debug log removed
             await registerUser(payload);
 
             // Redirect after successful registration

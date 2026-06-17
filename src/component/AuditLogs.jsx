@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { api } from '../services/api';
 import { 
   Shield, 
   Search, 
@@ -19,59 +20,33 @@ import {
 } from 'lucide-react';
 
 export const AuditLogs = ({ showNotification }) => {
-  const [logs] = useState([
-    {
-      id: '1',
-      timestamp: '2024-04-10 14:32:15',
-      userId: 'USR-001',
-      userName: 'Dr. Ahmed Khan',
-      userRole: 'DOCTOR',
-      action: 'Patient Record Updated',
-      module: 'Medical Records',
-      severity: 'Info',
-      ipAddress: '192.168.1.45',
-      details: 'Updated patient medical history'
-    },
-    {
-      id: '2',
-      timestamp: '2024-04-10 13:45:22',
-      userId: 'USR-003',
-      userName: 'Admin Panel',
-      userRole: 'ADMIN',
-      action: 'User Access Granted',
-      module: 'Security',
-      severity: 'Warning',
-      ipAddress: '192.168.1.50',
-      details: 'New user Doctor registered'
-    },
-    {
-      id: '3',
-      timestamp: '2024-04-10 12:15:08',
-      userId: 'USR-002',
-      userName: 'Lab Technician',
-      userRole: 'LAB_TECHNICIAN',
-      action: 'Lab Results Uploaded',
-      module: 'Laboratory',
-      severity: 'Info',
-      ipAddress: '192.168.1.55',
-      details: 'CBC results for Patient ID: PAT-001'
-    },
-    {
-      id: '4',
-      timestamp: '2024-04-10 11:32:45',
-      userId: 'USR-005',
-      userName: 'Pharmacist',
-      userRole: 'PHARMACIST',
-      action: 'Drug Inventory Updated',
-      module: 'Pharmacy',
-      severity: 'Info',
-      ipAddress: '192.168.1.60',
-      details: 'Paracetamol stock adjusted'
-    }
-  ]);
-  const [loading] = useState(false);
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const response = await api.getAuditLogs();
+        if (response.data && response.data.logs) {
+          // If backend returns { logs: [...] }
+          setLogs(response.data.logs);
+        } else if (Array.isArray(response.data)) {
+          // If backend returns [...]
+          setLogs(response.data);
+        } else {
+          setLogs([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch audit logs:', error);
+        setLogs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLogs();
+  }, []);
 
   const handleExport = () => {
     if (showNotification) {
