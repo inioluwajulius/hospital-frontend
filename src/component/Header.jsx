@@ -1,19 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Bell, User as UserIcon, ChevronDown, Menu, Check } from 'lucide-react';
+import { Search, Bell, User as UserIcon, ChevronDown, Menu, Check, LogOut, Settings, UserCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { initSocket } from '../services/socket';
 
 export const Header = ({ user, onMenuClick }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const notifRef = useRef(null);
+  const userMenuRef = useRef(null);
+  const navigate = useNavigate();
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (notifRef.current && !notifRef.current.contains(event.target)) {
         setShowNotifications(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -76,6 +84,20 @@ export const Header = ({ user, onMenuClick }) => {
     }
   };
 
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      alert(`Global search is coming soon! You searched for: ${searchQuery}`);
+      setSearchQuery('');
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/register';
+  };
+
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -97,14 +119,16 @@ export const Header = ({ user, onMenuClick }) => {
             <Menu size={24} />
           </button>
         )}
-        <div className="relative group flex-1 hidden sm:block">
+        <form onSubmit={handleSearchSubmit} className="relative group flex-1 hidden sm:block">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-600 transition-colors" size={18} />
           <input 
             type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search patients, records, or appointments..." 
             className="w-full pl-12 pr-4 py-2.5 bg-slate-100/50 hover:bg-slate-100 border border-transparent focus:border-emerald-200 rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-emerald-600/10 transition-all font-medium text-slate-700"
           />
-        </div>
+        </form>
       </div>
 
       <div className="flex items-center gap-4 sm:gap-6">
@@ -158,7 +182,10 @@ export const Header = ({ user, onMenuClick }) => {
                   )}
                 </div>
                 <div className="p-3 border-t border-slate-50 text-center bg-slate-50/50">
-                  <button className="text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors uppercase tracking-widest">
+                  <button 
+                    onClick={() => alert("Notification history coming soon.")}
+                    className="text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors uppercase tracking-widest"
+                  >
                     View All Notifications
                   </button>
                 </div>
@@ -169,20 +196,79 @@ export const Header = ({ user, onMenuClick }) => {
 
         <div className="hidden sm:block h-8 w-[1px] bg-slate-200"></div>
 
-        <button className="flex items-center gap-3 sm:pl-3 pr-2 py-1.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all group">
-          <div className="text-right hidden md:block">
-            <p className="text-sm font-bold text-slate-900 leading-none group-hover:text-emerald-600 transition-colors">{user?.name || 'User'}</p>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">{user?.role?.replace('_', ' ') || 'STAFF'}</p>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-200 overflow-hidden group-hover:scale-105 transition-transform shrink-0">
-            {user?.avatar ? (
-              <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-            ) : (
-              <UserIcon size={20} />
+        <div className="relative" ref={userMenuRef}>
+          <button 
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-3 sm:pl-3 pr-2 py-1.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all group"
+          >
+            <div className="text-right hidden md:block">
+              <p className="text-sm font-bold text-slate-900 leading-none group-hover:text-emerald-600 transition-colors">{user?.name || 'User'}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">{user?.role?.replace('_', ' ') || 'STAFF'}</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-200 overflow-hidden group-hover:scale-105 transition-transform shrink-0">
+              {user?.avatar ? (
+                <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <UserIcon size={20} />
+              )}
+            </div>
+            <ChevronDown size={16} className="hidden sm:block text-slate-400 group-hover:text-emerald-600 transition-colors ml-1" />
+          </button>
+
+          <AnimatePresence>
+            {showUserMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-50 origin-top-right"
+              >
+                <div className="p-4 border-b border-slate-50 md:hidden">
+                  <p className="text-sm font-bold text-slate-900 truncate">{user?.name || 'User'}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{user?.role?.replace('_', ' ') || 'STAFF'}</p>
+                </div>
+                <div className="p-2 space-y-1">
+                  <button 
+                    onClick={() => {
+                      const role = user?.role?.toLowerCase() || '';
+                      if (role === 'patient') navigate('/patient/settings');
+                      else if (role === 'admin' || role === 'super_admin' || role === 'hospital_admin') navigate('/admin/settings');
+                      else alert('Doctor profile coming soon.');
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                  >
+                    <UserCircle size={18} />
+                    Profile
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const role = user?.role?.toLowerCase() || '';
+                      if (role === 'patient') navigate('/patient/settings');
+                      else if (role === 'admin' || role === 'super_admin' || role === 'hospital_admin') navigate('/admin/settings');
+                      else alert('Doctor settings coming soon.');
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm font-semibold text-slate-700 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                  >
+                    <Settings size={18} />
+                    Settings
+                  </button>
+                </div>
+                <div className="p-2 border-t border-slate-50">
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                  >
+                    <LogOut size={18} />
+                    Log out
+                  </button>
+                </div>
+              </motion.div>
             )}
-          </div>
-          <ChevronDown size={16} className="hidden sm:block text-slate-400 group-hover:text-emerald-600 transition-colors ml-1" />
-        </button>
+          </AnimatePresence>
+        </div>
       </div>
     </header>
   );

@@ -2,6 +2,9 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
 import "./App.css";
 
+// Error Boundary
+import ErrorBoundary from "./component/ErrorBoundary";
+
 // Auth Pages
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
@@ -11,6 +14,7 @@ import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail";
 
 // Admin Pages
+import AdminDashboard from "./pages/admin/Dashboard";
 import DoctorRegister from "./pages/admin/DoctorRegister";
 import AdminDoctors from "./pages/admin/Doctors";
 import AdminPatients from "./pages/admin/Patients";
@@ -43,77 +47,73 @@ import { AuditLogs } from "./component/AuditLogs";
 import { Settings } from "./component/Settings";
 import { AdminSetup } from "./component/AdminSetup";
 import ProtectedRoute from "./component/ProtectedRoute";
+import NotFound from "./pages/NotFound";
 
 function App() {
-  const handleAdminRegister = async (data) => {
-    console.log("Admin registration:", data);
-  };
-
-  const handleAdminCancel = () => {
-    // Handle admin setup cancellation
-  };
-
   return (
-    <BrowserRouter>
-      <Analytics />
-      <Routes>
-        {/* Root redirect */}
-        <Route path="/" element={<Navigate to="/register" replace />} />
-        
-        {/* ========== AUTH ROUTES (Public) ========== */}
-        <Route path="/auth/login/:role" element={<Login />} />
-        <Route path="/auth/register/:type" element={<Register />} />
-        <Route path="/register" element={<RegistrationSelector />} />
-        <Route path="/auth/admin-setup" element={<AdminSetup onRegister={handleAdminRegister} onCancel={handleAdminCancel} />} />
-        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-        <Route path="/auth/reset-password/:token" element={<ResetPassword />} />
-        <Route path="/auth/verify-email/:token" element={<VerifyEmail />} />
-        
-        {/* ========== ADMIN ROUTES ========== */}
-        <Route element={<DashboardLayout />}>
-          {/* Doctor Registration (by admin) */}
-          <Route path="/admin/register-doctor" element={<ProtectedRoute requiredRole="admin"><DoctorRegister /></ProtectedRoute>} />
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Analytics />
+        <Routes>
+          {/* Root redirect */}
+          <Route path="/" element={<Navigate to="/register" replace />} />
           
-          {/* Admin Management Pages */}
-          <Route path="/admin/doctors" element={<ProtectedRoute requiredRole="admin"><AdminDoctors /></ProtectedRoute>} />
-          <Route path="/admin/patients" element={<ProtectedRoute requiredRole="admin"><AdminPatients /></ProtectedRoute>} />
-          <Route path="/admin/pending-approvals" element={<ProtectedRoute requiredRole="admin"><AdminPendingDoctors /></ProtectedRoute>} />
-          <Route path="/admin/audit-logs" element={<ProtectedRoute requiredRole="admin"><AuditLogs /></ProtectedRoute>} />
-          <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><Settings /></ProtectedRoute>} />
-        </Route>
+          {/* ========== AUTH ROUTES (Public) ========== */}
+          <Route path="/auth/login/:role" element={<Login />} />
+          <Route path="/auth/register/:type" element={<Register />} />
+          <Route path="/register" element={<RegistrationSelector />} />
+          <Route path="/auth/admin-setup" element={<AdminSetup />} />
+          <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+          <Route path="/auth/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/auth/verify-email/:token" element={<VerifyEmail />} />
+          
+          {/* ========== ADMIN ROUTES ========== */}
+          <Route element={<DashboardLayout />}>
+            {/* Doctor Registration (by admin) */}
+            <Route path="/admin/register-doctor" element={<ProtectedRoute requiredRole="admin"><DoctorRegister /></ProtectedRoute>} />
+            
+            {/* Admin Management Pages */}
+            <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin/doctors" element={<ProtectedRoute requiredRole="admin"><AdminDoctors /></ProtectedRoute>} />
+            <Route path="/admin/patients" element={<ProtectedRoute requiredRole="admin"><AdminPatients /></ProtectedRoute>} />
+            <Route path="/admin/pending-approvals" element={<ProtectedRoute requiredRole="admin"><AdminPendingDoctors /></ProtectedRoute>} />
+            <Route path="/admin/audit-logs" element={<ProtectedRoute requiredRole="admin"><AuditLogs /></ProtectedRoute>} />
+            <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><Settings /></ProtectedRoute>} />
+          </Route>
 
-        {/* ========== SUPER ADMIN ROUTES ========== */}
-        <Route element={<DashboardLayout />}>
-          <Route path="/superadmin/dashboard" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
-          <Route path="/superadmin/hospitals" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminHospitals /></ProtectedRoute>} />
-          <Route path="/superadmin/hospitals/new" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminCreateHospital /></ProtectedRoute>} />
-        </Route>
+          {/* ========== SUPER ADMIN ROUTES ========== */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/superadmin/dashboard" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
+            <Route path="/superadmin/hospitals" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminHospitals /></ProtectedRoute>} />
+            <Route path="/superadmin/hospitals/new" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminCreateHospital /></ProtectedRoute>} />
+          </Route>
 
-        {/* ========== DOCTOR ROUTES ========== */}
-        <Route element={<DashboardLayout />}>
-          <Route path="/doctor/dashboard" element={<ProtectedRoute requiredRole="doctor"><DoctorDashboard /></ProtectedRoute>} />
-          <Route path="/doctor/appointments" element={<ProtectedRoute requiredRole="doctor"><DoctorAppointments /></ProtectedRoute>} />
-          <Route path="/doctor/prescriptions" element={<ProtectedRoute requiredRole="doctor"><DoctorPrescriptions /></ProtectedRoute>} />
-          <Route path="/doctor/medical-records" element={<ProtectedRoute requiredRole="doctor"><DoctorMedicalRecords /></ProtectedRoute>} />
-          <Route path="/doctor/lab-tests" element={<ProtectedRoute requiredRole="doctor"><DoctorLabTest /></ProtectedRoute>} />
-          <Route path="/doctor/radiology" element={<ProtectedRoute requiredRole="doctor"><DoctorRadiology /></ProtectedRoute>} />
-        </Route>
+          {/* ========== DOCTOR ROUTES ========== */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/doctor/dashboard" element={<ProtectedRoute requiredRole="doctor"><DoctorDashboard /></ProtectedRoute>} />
+            <Route path="/doctor/appointments" element={<ProtectedRoute requiredRole="doctor"><DoctorAppointments /></ProtectedRoute>} />
+            <Route path="/doctor/prescriptions" element={<ProtectedRoute requiredRole="doctor"><DoctorPrescriptions /></ProtectedRoute>} />
+            <Route path="/doctor/medical-records" element={<ProtectedRoute requiredRole="doctor"><DoctorMedicalRecords /></ProtectedRoute>} />
+            <Route path="/doctor/lab-tests" element={<ProtectedRoute requiredRole="doctor"><DoctorLabTest /></ProtectedRoute>} />
+            <Route path="/doctor/radiology" element={<ProtectedRoute requiredRole="doctor"><DoctorRadiology /></ProtectedRoute>} />
+          </Route>
 
-        {/* ========== PATIENT ROUTES ========== */}
-        <Route element={<DashboardLayout />}>
-          <Route path="/patient/dashboard" element={<ProtectedRoute requiredRole="patient"><PatientDashboard /></ProtectedRoute>} />
-          <Route path="/patient/appointments" element={<ProtectedRoute requiredRole="patient"><PatientAppointments /></ProtectedRoute>} />
-          <Route path="/patient/prescriptions" element={<ProtectedRoute requiredRole="patient"><PatientPrescriptions /></ProtectedRoute>} />
-          <Route path="/patient/medical-records" element={<ProtectedRoute requiredRole="patient"><PatientMedicalRecords /></ProtectedRoute>} />
-          <Route path="/patient/billing" element={<ProtectedRoute requiredRole="patient"><PatientBilling /></ProtectedRoute>} />
-          <Route path="/patient/pharmacy" element={<ProtectedRoute requiredRole="patient"><PatientPharmacy /></ProtectedRoute>} />
-          <Route path="/patient/settings" element={<ProtectedRoute requiredRole="patient"><Settings /></ProtectedRoute>} />
-        </Route>
+          {/* ========== PATIENT ROUTES ========== */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/patient/dashboard" element={<ProtectedRoute requiredRole="patient"><PatientDashboard /></ProtectedRoute>} />
+            <Route path="/patient/appointments" element={<ProtectedRoute requiredRole="patient"><PatientAppointments /></ProtectedRoute>} />
+            <Route path="/patient/prescriptions" element={<ProtectedRoute requiredRole="patient"><PatientPrescriptions /></ProtectedRoute>} />
+            <Route path="/patient/medical-records" element={<ProtectedRoute requiredRole="patient"><PatientMedicalRecords /></ProtectedRoute>} />
+            <Route path="/patient/billing" element={<ProtectedRoute requiredRole="patient"><PatientBilling /></ProtectedRoute>} />
+            <Route path="/patient/pharmacy" element={<ProtectedRoute requiredRole="patient"><PatientPharmacy /></ProtectedRoute>} />
+            <Route path="/patient/settings" element={<ProtectedRoute requiredRole="patient"><Settings /></ProtectedRoute>} />
+          </Route>
 
-        {/* 404 Fallback */}
-        <Route path="*" element={<Navigate to="/register" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* 404 Page */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

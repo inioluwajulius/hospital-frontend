@@ -26,19 +26,13 @@ const PatientBilling = ({ showNotification } = {}) => {
   const handlePayment = (invoice) => {
     setSelectedInvoice(invoice);
     if (showNotification) {
-      showNotification(`Processing payment for invoice ${invoice._id || invoice.id}...`, 'info');
-      setTimeout(() => {
-        showNotification('Payment processed successfully! (Simulated)', 'success');
-      }, 1500);
+      showNotification('Online payments coming soon. Please visit the billing counter for now.', 'info');
     }
   };
 
   const handleDownloadInvoice = (invoice) => {
     if (showNotification) {
-      showNotification(`Downloading invoice...`, 'info');
-      setTimeout(() => {
-        showNotification('Invoice downloaded!', 'success');
-      }, 1000);
+      showNotification('Invoice download will be available soon.', 'info');
     }
   };
 

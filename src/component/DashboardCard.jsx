@@ -1,9 +1,6 @@
 import React from 'react'
 
-const DashboardCard = () => {
-  return (
-    <div>DashboardCard</div>
-  )
-}
+// This component has been deprecated. Use StatCard from individual dashboard pages.
+const DashboardCard = () => null;
 
 export default DashboardCard

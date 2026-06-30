@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { UserPlus, Loader2, Users, Stethoscope, CheckCircle2 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import BrandLogo from '../../component/BrandLogo';
 import { cn } from '../../lib/utils';
@@ -38,6 +38,24 @@ const Register = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
+    
+    // Hospitals state
+    const [hospitals, setHospitals] = useState([]);
+    const [isLoadingHospitals, setIsLoadingHospitals] = useState(true);
+
+    useEffect(() => {
+        const fetchHospitals = async () => {
+            try {
+                const response = await api.getHospitals();
+                setHospitals(response.data.data);
+            } catch (err) {
+                console.error('Failed to load hospitals', err);
+            } finally {
+                setIsLoadingHospitals(false);
+            }
+        };
+        fetchHospitals();
+    }, []);
 
     // Use custom hooks for form and auth management
     const form = useForm({
@@ -49,6 +67,7 @@ const Register = () => {
         age: '',
         gender: '',
         bloodGroup: '',
+        hospitalId: '',
     });
 
     const validation = useValidation();
@@ -67,9 +86,9 @@ const Register = () => {
         const hasPassword = form.formData.password && passwordIsStrong;
 
         if (userType === 'patient') {
-            return hasValidName && hasValidEmail && hasPassword && form.formData.phone && form.formData.age && form.formData.gender;
+            return hasValidName && hasValidEmail && hasPassword && form.formData.phone && form.formData.age && form.formData.gender && form.formData.hospitalId;
         } else if (userType === 'staff') {
-            return hasValidName && hasValidEmail && hasPassword && form.formData.role;
+            return hasValidName && hasValidEmail && hasPassword && form.formData.role && form.formData.hospitalId;
         }
 
         return false;
@@ -120,6 +139,7 @@ const Register = () => {
                 password: form.formData.password,
                 userType: userType,
                 role: userType === 'staff' ? form.formData.role : 'PATIENT',
+                hospitalId: form.formData.hospitalId,
             };
 
             if (userType === 'patient') {
@@ -154,31 +174,36 @@ const Register = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-emerald-50 via-slate-50 to-teal-100 px-4 py-10">
-            <Motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="bg-white p-8 md:p-12 rounded-3xl shadow-2xl w-full max-w-md border border-slate-100"
-            >
-                <div className="text-center mb-12">
-                    <Motion.div 
-                        initial={{ scale: 0.8 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.2, duration: 0.3 }}
-                        className="flex justify-center mb-6"
-                    >
-                        <BrandLogo size="hero" showText={false} />
-                    </Motion.div>
-                    <Motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.5 }}
-                    >
-                        <h1 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Create Account</h1>
-                        <p className="text-sm text-slate-500 font-medium">Join MediCare Hospital System</p>
-                    </Motion.div>
+        <div className="min-h-screen flex flex-col lg:flex-row bg-white">
+            {/* Left Column - Branding (Hidden on mobile) */}
+            <div className="hidden lg:flex flex-col justify-center items-center w-1/2 bg-linear-to-br from-emerald-600 to-teal-600 text-white p-12 relative overflow-hidden">
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_white_1px,_transparent_1px)]" style={{ backgroundSize: '24px 24px' }}></div>
+                <div className="relative z-10 text-center max-w-lg flex flex-col items-center">
+                   <div className="bg-white/10 p-5 rounded-3xl backdrop-blur-md border border-white/20 mb-8 inline-block shadow-xl">
+                       <BrandLogo size="hero" showText={false} className="text-white" />
+                   </div>
+                   <h2 className="text-4xl font-extrabold mb-4 text-white tracking-tight">Join MediCare</h2>
+                   <p className="text-emerald-100 text-lg font-medium leading-relaxed">
+                     Register to access your comprehensive healthcare management system.
+                   </p>
                 </div>
+            </div>
+
+            {/* Right Column - Form */}
+            <div className="flex-1 flex flex-col justify-center p-6 lg:p-12 overflow-y-auto h-screen">
+                <div className="w-full max-w-xl mx-auto">
+                    <Motion.div 
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4 }}
+                    >
+                        <div className="text-center mb-10">
+                            <div className="lg:hidden flex justify-center mb-6">
+                                <BrandLogo size="hero" showText={false} />
+                            </div>
+                            <h1 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">Create Account</h1>
+                            <p className="text-sm text-slate-500 font-medium">Join MediCare Hospital System</p>
+                        </div>
 
                 {/* Role Selection Screen */}
                 {!userType && !type && (
@@ -193,7 +218,7 @@ const Register = () => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setUserType('staff')}
-                            className="w-full p-6 border-2 border-slate-200 rounded-2xl hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                            className="w-full p-6 border-2 border-slate-200 rounded-2xl hover:border-primary hover:bg-primary/5 transition-all text-left group bg-white"
                         >
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-blue-100 text-blue-600 rounded-xl group-hover:bg-blue-200 transition-colors">
@@ -210,7 +235,7 @@ const Register = () => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => setUserType('patient')}
-                            className="w-full p-6 border-2 border-slate-200 rounded-2xl hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                            className="w-full p-6 border-2 border-slate-200 rounded-2xl hover:border-primary hover:bg-primary/5 transition-all text-left group bg-white"
                         >
                             <div className="flex items-center gap-4">
                                 <div className="p-3 bg-emerald-100 text-emerald-600 rounded-xl group-hover:bg-emerald-200 transition-colors">
@@ -383,6 +408,31 @@ const Register = () => {
                                     )}
                                 </AnimatePresence>
 
+                                {/* Hospital Selection Field */}
+                                <Motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.05 }}
+                                >
+                                    {isLoadingHospitals ? (
+                                        <div className="flex items-center justify-center p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                            <Loader2 size={16} className="animate-spin text-primary mr-2" />
+                                            <span className="text-sm text-slate-500">Loading hospitals...</span>
+                                        </div>
+                                    ) : (
+                                        <SelectField
+                                            label="Select Hospital"
+                                            name="hospitalId"
+                                            options={hospitals.map(h => ({ label: h.name, value: h.id }))}
+                                            value={form.formData.hospitalId}
+                                            onChange={form.handleChange}
+                                            onBlur={() => form.handleBlur('hospitalId')}
+                                            placeholder="Choose a hospital to join"
+                                            required
+                                        />
+                                    )}
+                                </Motion.div>
+
                                 {/* Full Name Field */}
                                 <Motion.div
                                     initial={{ opacity: 0, x: -20 }}
@@ -469,7 +519,7 @@ const Register = () => {
 
                                 {/* Patient Specific Fields */}
                                 {userType === 'patient' && (
-                                    <>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {/* Phone Field */}
                                         <Motion.div
                                             initial={{ opacity: 0, x: -20 }}
@@ -544,7 +594,7 @@ const Register = () => {
                                                 placeholder="Not specified"
                                             />
                                         </Motion.div>
-                                    </>
+                                    </div>
                                 )}
 
                                 {/* Submit Button */}
@@ -579,29 +629,16 @@ const Register = () => {
                         ) : null}
                     </>
                 )}
-
-                {/* Footer Links */}
-                <Motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5, duration: 0.5 }}
-                    className="text-center text-sm text-slate-600 mt-8"
-                >
-                    Already have an account?{' '}
-                    <a href={type === 'doctor' ? '/auth/login/doctor' : '/auth/login/patient'} className="text-primary font-bold hover:underline">
-                        Login here
-                    </a>
-                </Motion.div>
-
-                <Motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.55, duration: 0.5 }}
-                    className="text-center text-xs text-slate-400 mt-6 pt-6 border-t border-slate-100"
-                >
-                    Join thousands of healthcare professionals using MediCare
-                </Motion.div>
-            </Motion.div>
+                        
+                <div className="text-center text-sm text-slate-600 mt-8">
+                            Already have an account?{' '}
+                            <Link to="/auth/login" className="text-primary font-bold hover:underline">
+                                Login here
+                            </Link>
+                        </div>
+                    </Motion.div>
+                </div>
+            </div>
         </div>
     );
 };

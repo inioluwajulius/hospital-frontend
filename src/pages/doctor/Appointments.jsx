@@ -37,6 +37,7 @@ const Appointments = ({ showNotification } = {}) => {
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilters, setStatusFilters] = useState(['Scheduled', 'In-Progress', 'Completed']);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [apiError, setApiError] = useState(null);
 
   const handleExport = () => {
     if (showNotification) {
@@ -78,6 +79,7 @@ const Appointments = ({ showNotification } = {}) => {
         setPatients(patientRes.data?.data || patientRes.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setApiError(error.response?.data?.message || 'Failed to load appointments. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -182,6 +184,24 @@ const Appointments = ({ showNotification } = {}) => {
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
         <p className="text-sm text-slate-500 font-medium">Loading appointment schedules...</p>
+      </div>
+    );
+  }
+
+  if (apiError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+          <AlertCircle size={32} />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">Failed to Load Appointments</h2>
+        <p className="text-sm text-slate-500 max-w-md">{apiError}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-2 px-6 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -679,69 +699,83 @@ const Appointments = ({ showNotification } = {}) => {
                     </div>
                   </div>
                   <div className="divide-y divide-slate-50">
-                    {filteredAppointments.map((apt) => (
-                      <div 
-                        key={apt.id} 
-                        onClick={() => setSelectedAppointment(apt)}
-                        className={cn(
-                          "p-6 hover:bg-slate-50 transition-colors flex flex-col md:flex-row items-center gap-8 cursor-pointer",
-                          selectedAppointment?.id === apt.id && "bg-slate-50 ring-1 ring-inset ring-primary/10"
-                        )}
-                      >
-                        <div className="w-24 text-center shrink-0">
-                          <div className="text-lg font-extrabold text-slate-900">{apt.time?.split(' ')[0]}</div>
-                          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{apt.time?.split(' ')[1]}</div>
+                    {filteredAppointments.length === 0 ? (
+                      <div className="p-12 text-center flex flex-col items-center">
+                        <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mb-4">
+                          <CalendarIcon size={32} />
                         </div>
-                        
-                        <div className="flex-1 flex items-center gap-6">
-                          <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
-                            <User size={24} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-3 mb-1">
-                              <h4 className="font-bold text-slate-900">{apt.patientName}</h4>
-                              <span className={cn(
-                                "px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider",
-                                apt.type === 'Emergency' ? "bg-red-100 text-red-600" : 
-                                apt.type === 'Surgery' ? "bg-purple-100 text-purple-600" :
-                                "bg-blue-100 text-blue-600"
-                              )}>
-                                {apt.type}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
-                              <div className="flex items-center gap-1.5">
-                                <Stethoscope size={14} className="text-slate-400" />
-                                {apt.doctorName}
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <MapPin size={14} className="text-slate-400" />
-                                Room 402
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-6 shrink-0">
-                          {apt.type === 'Consultation' && (
-                            <button className="p-2.5 bg-primary/5 text-primary rounded-xl hover:bg-primary/10 transition-all">
-                              <Video size={18} />
-                            </button>
-                          )}
-                          <span className={cn(
-                            "px-3 py-1 rounded-full text-[10px] font-bold uppercase",
-                            apt.status === 'In-Progress' ? "bg-amber-100 text-amber-600 animate-pulse" : 
-                            apt.status === 'Confirmed' ? "bg-blue-100 text-blue-600" :
-                            "bg-emerald-100 text-emerald-600"
-                          )}>
-                            {apt.status}
-                          </span>
-                          <button className="text-slate-300 hover:text-slate-600 transition-colors">
-                            <MoreVertical size={18} />
-                          </button>
-                        </div>
+                        <h4 className="text-lg font-bold text-slate-900 mb-1">No Appointments Found</h4>
+                        <p className="text-sm text-slate-500 max-w-sm">
+                          {appointments.length === 0 
+                            ? "There are no appointments scheduled yet. Book a new appointment to get started." 
+                            : "No appointments match your current filters and search query."}
+                        </p>
                       </div>
-                    ))}
+                    ) : (
+                      filteredAppointments.map((apt) => (
+                        <div 
+                          key={apt.id || apt._id} 
+                          onClick={() => setSelectedAppointment(apt)}
+                          className={cn(
+                            "p-6 hover:bg-slate-50 transition-colors flex flex-col md:flex-row items-center gap-8 cursor-pointer",
+                            selectedAppointment?.id === apt.id && "bg-slate-50 ring-1 ring-inset ring-primary/10"
+                          )}
+                        >
+                          <div className="w-24 text-center shrink-0">
+                            <div className="text-lg font-extrabold text-slate-900">{apt.time?.split(' ')[0]}</div>
+                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{apt.time?.split(' ')[1]}</div>
+                          </div>
+                          
+                          <div className="flex-1 flex items-center gap-6">
+                            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
+                              <User size={24} />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-3 mb-1">
+                                <h4 className="font-bold text-slate-900">{apt.patientName}</h4>
+                                <span className={cn(
+                                  "px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider",
+                                  apt.type === 'Emergency' ? "bg-red-100 text-red-600" : 
+                                  apt.type === 'Surgery' ? "bg-purple-100 text-purple-600" :
+                                  "bg-blue-100 text-blue-600"
+                                )}>
+                                  {apt.type}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
+                                <div className="flex items-center gap-1.5">
+                                  <Stethoscope size={14} className="text-slate-400" />
+                                  {apt.doctorName}
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin size={14} className="text-slate-400" />
+                                  Room 402
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-6 shrink-0">
+                            {apt.type === 'Consultation' && (
+                              <button className="p-2.5 bg-primary/5 text-primary rounded-xl hover:bg-primary/10 transition-all">
+                                <Video size={18} />
+                              </button>
+                            )}
+                            <span className={cn(
+                              "px-3 py-1 rounded-full text-[10px] font-bold uppercase",
+                              apt.status === 'In-Progress' ? "bg-amber-100 text-amber-600 animate-pulse" : 
+                              apt.status === 'Confirmed' ? "bg-blue-100 text-blue-600" :
+                              "bg-emerald-100 text-emerald-600"
+                            )}>
+                              {apt.status}
+                            </span>
+                            <button className="text-slate-300 hover:text-slate-600 transition-colors">
+                              <MoreVertical size={18} />
+                            </button>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </section>
 

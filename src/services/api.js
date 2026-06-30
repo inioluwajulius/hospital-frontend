@@ -62,6 +62,7 @@ export const getPrescription = (id) => API.get(`/prescriptions/${id}`);
 export const getRecords = () => API.get("/records");
 export const getAuditLogs = () => API.get("/audit-logs");
 export const getHealth = () => API.get("/health");
+export const getHospitals = () => API.get("/public/hospitals");
 
 // POST methods - V1 Endpoints
 export const registerUser = (data) => API.post("/auth/register", data);
@@ -144,6 +145,7 @@ export const api = {
     getAuditLogs,
     getMe,
     getHealth,
+    getHospitals,
     getNotifications,
     // POST methods
     createPatient,

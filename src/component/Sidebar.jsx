@@ -48,6 +48,7 @@ const Sidebar = () => {
     ];
   } else if (userRole === 'hospital_admin' || userRole === 'admin') {
     items = [
+      { label: "Dashboard", path: "/admin/dashboard", icon: <LayoutDashboard size={20} /> },
       { label: "Doctors", path: "/admin/doctors", icon: <Users size={20} /> },
       { label: "Patients", path: "/admin/patients", icon: <User size={20} /> },
       { label: "Doctor Approvals", path: "/admin/pending-approvals", icon: <UserCheck size={20} /> },

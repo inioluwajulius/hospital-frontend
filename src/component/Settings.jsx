@@ -9,11 +9,8 @@ import {
   Smartphone,
   ChevronRight,
   Activity,
-  Palette,
-  Save,
-  ArrowLeft
+  Palette
 } from 'lucide-react';
-import { api } from "../services/api";
 
 const SettingItem = ({ icon: Icon, title, description, badge, onClick }) => (
   <button onClick={onClick} className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-200">
@@ -25,7 +22,7 @@ const SettingItem = ({ icon: Icon, title, description, badge, onClick }) => (
       <p className="text-xs text-slate-500">{description}</p>
     </div>
     {badge && (
-      <span className="px-2 py-0.5 bg-emerald-600/10 text-emerald-600 text-[10px] font-bold rounded-full uppercase tracking-wider">
+      <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-full uppercase tracking-wider">
         {badge}
       </span>
     )}
@@ -34,11 +31,7 @@ const SettingItem = ({ icon: Icon, title, description, badge, onClick }) => (
 );
 
 export const Settings = () => {
-  const [activeTab, setActiveTab] = useState('main');
-  const [loading, setLoading] = useState(false);
-  const [brandingData, setBrandingData] = useState({ primaryColor: '#10b981', secondaryColor: '#0891b2' });
-
-  // Lazily initialize `user` from localStorage to avoid setState in effect
+  // Lazily initialize `user` from localStorage
   const [user] = useState(() => {
     try {
       const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
@@ -48,54 +41,9 @@ export const Settings = () => {
     }
   });
 
-  const handleSaveBranding = async () => {
-    setLoading(true);
-    try {
-      await api.put('/hospital-admin/profile', { branding: brandingData });
-      alert('Branding updated successfully! Refresh to see changes across the app.');
-      setActiveTab('main');
-    } catch (err) {
-      console.error('Failed to update branding:', err);
-      alert('Failed to update branding');
-    } finally {
-      setLoading(false);
-    }
+  const handleComingSoon = (featureName) => {
+    alert(`${featureName} feature is coming soon!`);
   };
-
-  if (activeTab === 'branding') {
-    return (
-      <div className="max-w-4xl mx-auto space-y-6">
-        <button onClick={() => setActiveTab('main')} className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 font-semibold text-sm">
-          <ArrowLeft size={16} /> Back to Settings
-        </button>
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">White-Label Branding</h2>
-          <p className="text-slate-500 text-sm mt-1">Customize the look and feel of your hospital portal.</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-semibold text-slate-700 block mb-2">Primary Brand Color</label>
-              <div className="flex items-center gap-4">
-                <input type="color" value={brandingData.primaryColor} onChange={(e) => setBrandingData(prev => ({...prev, primaryColor: e.target.value}))} className="w-12 h-12 rounded cursor-pointer border-0 p-0" />
-                <input type="text" value={brandingData.primaryColor} onChange={(e) => setBrandingData(prev => ({...prev, primaryColor: e.target.value}))} className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-sm" />
-              </div>
-            </div>
-            <div>
-              <label className="text-sm font-semibold text-slate-700 block mb-2">Secondary Brand Color</label>
-              <div className="flex items-center gap-4">
-                <input type="color" value={brandingData.secondaryColor} onChange={(e) => setBrandingData(prev => ({...prev, secondaryColor: e.target.value}))} className="w-12 h-12 rounded cursor-pointer border-0 p-0" />
-                <input type="text" value={brandingData.secondaryColor} onChange={(e) => setBrandingData(prev => ({...prev, secondaryColor: e.target.value}))} className="px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg font-mono text-sm" />
-              </div>
-            </div>
-          </div>
-          <button onClick={handleSaveBranding} disabled={loading} className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-bold flex items-center gap-2">
-            <Save size={18} /> {loading ? 'Saving...' : 'Save Branding'}
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -115,9 +63,12 @@ export const Settings = () => {
               )}
             </div>
             <h3 className="font-bold text-slate-900">{user?.name || 'User'}</h3>
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mt-1">{user?.role || 'STAFF'}</p>
-            <button className="w-full mt-6 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors">
-              Edit Profile
+            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mt-1">{user?.role?.replace('_', ' ') || 'STAFF'}</p>
+            <button 
+              onClick={() => handleComingSoon('Profile Editing')}
+              className="w-full mt-6 py-2 bg-slate-100 text-slate-400 text-xs font-bold rounded-xl cursor-not-allowed"
+            >
+              Edit Profile (Coming Soon)
             </button>
           </div>
 
@@ -144,17 +95,22 @@ export const Settings = () => {
                 icon={UserIcon} 
                 title="Personal Information" 
                 description="Update your name, email, and contact details" 
+                badge="Coming Soon"
+                onClick={() => handleComingSoon('Personal Information')}
               />
               <SettingItem 
                 icon={Lock} 
                 title="Password & Security" 
                 description="Change your password and enable 2FA" 
-                badge="Secure"
+                badge="Coming Soon"
+                onClick={() => handleComingSoon('Password & Security')}
               />
               <SettingItem 
                 icon={Bell} 
                 title="Notifications" 
                 description="Manage how you receive alerts and updates" 
+                badge="Coming Soon"
+                onClick={() => handleComingSoon('Notification Settings')}
               />
             </div>
           </div>
@@ -168,29 +124,36 @@ export const Settings = () => {
                 icon={Globe} 
                 title="Regional Settings" 
                 description="Set timezone, language, and currency" 
+                badge="Coming Soon"
+                onClick={() => handleComingSoon('Regional Settings')}
               />
               <SettingItem 
                 icon={Palette} 
                 title="Branding & White-Label" 
                 description="Customize colors and logos for your hospital" 
-                badge="Premium"
-                onClick={() => setActiveTab('branding')}
+                badge="Coming Soon"
+                onClick={() => handleComingSoon('Branding')}
               />
               <SettingItem 
                 icon={Shield} 
                 title="Roles & Permissions" 
                 description="Manage access levels for hospital staff" 
-                badge="Admin"
+                badge="Coming Soon"
+                onClick={() => handleComingSoon('Roles & Permissions')}
               />
               <SettingItem 
                 icon={Database} 
                 title="Data Management" 
                 description="Backup, export, and manage system data" 
+                badge="Coming Soon"
+                onClick={() => handleComingSoon('Data Management')}
               />
               <SettingItem 
                 icon={Smartphone} 
                 title="Connected Devices" 
                 description="Manage lab equipment and mobile devices" 
+                badge="Coming Soon"
+                onClick={() => handleComingSoon('Connected Devices')}
               />
             </div>
           </div>

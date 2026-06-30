@@ -25,6 +25,7 @@ const Doctors = ({ showNotification } = {}) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('All');
+  const [apiError, setApiError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -51,6 +52,7 @@ const Doctors = ({ showNotification } = {}) => {
         setDoctors(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching doctors:', error);
+        setApiError(error.response?.data?.message || 'Failed to load medical staff directory. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -118,6 +120,24 @@ const Doctors = ({ showNotification } = {}) => {
       <div className="flex flex-col items-center justify-center py-20 gap-3">
         <Loader2 className="w-8 h-8 text-primary animate-spin" />
         <p className="text-sm text-slate-500 font-medium">Loading medical staff...</p>
+      </div>
+    );
+  }
+
+  if (apiError) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-600">
+          <X size={32} />
+        </div>
+        <h2 className="text-xl font-bold text-slate-900">Failed to Load Directory</h2>
+        <p className="text-sm text-slate-500 max-w-md">{apiError}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-2 px-6 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors"
+        >
+          Try Again
+        </button>
       </div>
     );
   }
@@ -399,59 +419,73 @@ const Doctors = ({ showNotification } = {}) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             <AnimatePresence>
-              {filteredDoctors.slice(0, 12).map((doctor, idx) => (
-                <motion.div 
-                  layout
-                  key={doctor.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: idx * 0.05 }}
-                  className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/50 hover:border-primary/30 shadow-xl shadow-slate-200/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group"
-                >
-                  <div className="flex items-start justify-between mb-5">
-                    <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center text-2xl font-black group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-inner">
-                      {doctor.name?.charAt(0)}
-                    </div>
-                    <span className={cn(
-                      "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
-                      doctor.availability === 'Available' ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50' :
-                      doctor.availability === 'On Leave' ? 'bg-amber-50 text-amber-600 border-amber-200/50' :
-                      'bg-blue-50 text-blue-600 border-blue-200/50'
-                    )}>
-                      {doctor.availability}
-                    </span>
+              {filteredDoctors.length === 0 ? (
+                <div className="col-span-full py-16 text-center flex flex-col items-center">
+                  <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mb-4">
+                    <Users size={32} />
                   </div>
-
-                  <h4 className="font-extrabold text-slate-900 mb-1 text-xl">{doctor.name}</h4>
-                  <p className="text-sm text-primary font-bold mb-5 bg-primary/5 inline-block px-2 py-1 rounded-lg">{doctor.specialization}</p>
-
-                  <div className="space-y-3 mb-6 bg-slate-50/50 p-4 rounded-2xl">
-                    <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
-                      <Badge size={16} className="text-slate-400" />
-                      {doctor.department}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
-                      <Clock size={16} className="text-slate-400" />
-                      {doctor.yearsOfExperience || 0} years experience
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-slate-600 font-medium truncate">
-                      <Mail size={16} className="text-slate-400 shrink-0" />
-                      <span className="truncate">{doctor.email}</span>
-                    </div>
-                    {doctor.phone && (
-                      <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
-                        <Phone size={16} className="text-slate-400" />
-                        {doctor.phone}
+                  <h4 className="text-lg font-bold text-slate-900 mb-1">No Doctors Found</h4>
+                  <p className="text-sm text-slate-500 max-w-sm">
+                    {doctors.length === 0 
+                      ? "There are no doctors registered in the system yet." 
+                      : "No doctors match your current filters and search query."}
+                  </p>
+                </div>
+              ) : (
+                filteredDoctors.slice(0, 12).map((doctor, idx) => (
+                  <motion.div 
+                    layout
+                    key={doctor.id || doctor._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="bg-white/80 backdrop-blur-sm rounded-3xl p-6 border border-white/50 hover:border-primary/30 shadow-xl shadow-slate-200/30 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group"
+                  >
+                    <div className="flex items-start justify-between mb-5">
+                      <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center text-2xl font-black group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 shadow-inner">
+                        {doctor.name?.charAt(0) || 'D'}
                       </div>
-                    )}
-                  </div>
+                      <span className={cn(
+                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+                        doctor.availability === 'Available' ? 'bg-emerald-50 text-emerald-600 border-emerald-200/50' :
+                        doctor.availability === 'On Leave' ? 'bg-amber-50 text-amber-600 border-amber-200/50' :
+                        'bg-blue-50 text-blue-600 border-blue-200/50'
+                      )}>
+                        {doctor.availability || 'Unknown'}
+                      </span>
+                    </div>
 
-                  <button className="w-full py-3 bg-slate-50 text-slate-600 border border-slate-200 rounded-2xl font-bold text-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 active:scale-95 shadow-sm">
-                    View Profile
-                  </button>
-                </motion.div>
-              ))}
+                    <h4 className="font-extrabold text-slate-900 mb-1 text-xl">{doctor.name}</h4>
+                    <p className="text-sm text-primary font-bold mb-5 bg-primary/5 inline-block px-2 py-1 rounded-lg">{doctor.specialization || doctor.department}</p>
+
+                    <div className="space-y-3 mb-6 bg-slate-50/50 p-4 rounded-2xl">
+                      <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
+                        <Badge size={16} className="text-slate-400" />
+                        {doctor.department}
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
+                        <Clock size={16} className="text-slate-400" />
+                        {doctor.yearsOfExperience || doctor.experience || 0} years experience
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-slate-600 font-medium truncate">
+                        <Mail size={16} className="text-slate-400 shrink-0" />
+                        <span className="truncate">{doctor.email}</span>
+                      </div>
+                      {doctor.phone && (
+                        <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
+                          <Phone size={16} className="text-slate-400" />
+                          {doctor.phone}
+                        </div>
+                      )}
+                    </div>
+
+                    <button className="w-full py-3 bg-slate-50 text-slate-600 border border-slate-200 rounded-2xl font-bold text-sm hover:bg-primary hover:text-white hover:border-primary transition-all duration-300 active:scale-95 shadow-sm">
+                      View Profile
+                    </button>
+                  </motion.div>
+                ))
+              )}
             </AnimatePresence>
           </div>
         </div>

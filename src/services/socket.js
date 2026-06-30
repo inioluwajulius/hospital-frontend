@@ -24,11 +24,11 @@ export const initSocket = () => {
     });
 
     socket.on('connect', () => {
-        console.log('Connected to notification server');
+        // Connection established
     });
 
-    socket.on('connect_error', (err) => {
-        console.error('Socket connection error:', err.message);
+    socket.on('connect_error', () => {
+        // Socket connection failed — notifications may be unavailable
     });
 
     return socket;
