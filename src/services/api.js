@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const getBaseURL = () => {
-    return import.meta.env.VITE_API_BASE_URL || "/api/v1";
+    return import.meta.env.VITE_API_BASE_URL || "https://hospital-backend-xdjf.onrender.com/api/v1";
 };
 
 const API = axios.create({
