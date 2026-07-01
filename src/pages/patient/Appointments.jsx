@@ -408,98 +408,135 @@ const PatientAppointments = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowModal(false)}
-              className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
+              className="fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm"
             />
             <motion.div 
-              initial={{ x: '100%', opacity: 0.5 }}
+              initial={{ x: '100%', opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              exit={{ x: '100%', opacity: 0.5 }}
+              exit={{ x: '100%', opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col border-l border-slate-100"
             >
-              <div className="flex items-center justify-between p-6 border-b border-slate-100">
-                <h2 className="text-xl font-extrabold text-slate-900">Book Appointment</h2>
-                <button 
-                  onClick={() => setShowModal(false)}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
-                >
-                  <X size={24} />
-                </button>
+              {/* Modal Header */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-700 p-8 pb-10">
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-black/10 rounded-full blur-xl"></div>
+                <div className="relative z-10 flex items-start justify-between">
+                  <div>
+                    <h2 className="text-2xl font-extrabold text-white tracking-tight">Book Appointment</h2>
+                    <p className="text-emerald-100 font-medium text-sm mt-1">Schedule a visit with our specialists</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowModal(false)}
+                    className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-full transition-colors backdrop-blur-md"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-6">
+              {/* Form Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-8 -mt-6 bg-white rounded-t-3xl relative z-20">
                 <form id="booking-form" onSubmit={handleBook} className="space-y-6">
+                  
+                  {/* Doctor Selection */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-bold text-slate-700">Select Doctor</label>
-                    <select 
-                      required
-                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3.5 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-slate-700 outline-hidden"
-                      value={newAppointment.doctorId}
-                      onChange={(e) => setNewAppointment({...newAppointment, doctorId: e.target.value})}
-                    >
-                      <option value="">-- Choose a Specialist --</option>
-                      {doctors.map(d => (
-                        <option key={d._id} value={d._id}>Dr. {d.name} ({d.specialization})</option>
-                      ))}
-                    </select>
+                    <label className="block text-sm font-bold text-slate-700 ml-1">Select Specialist</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-emerald-600">
+                        <Stethoscope size={20} />
+                      </div>
+                      <select 
+                        required
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-slate-700 outline-hidden appearance-none"
+                        value={newAppointment.doctorId}
+                        onChange={(e) => setNewAppointment({...newAppointment, doctorId: e.target.value})}
+                      >
+                        <option value="" disabled className="text-slate-400">-- Choose a Doctor --</option>
+                        {doctors.map(d => (
+                          <option key={d._id} value={d._id} className="font-medium text-slate-700">
+                            Dr. {d.name} {d.specialization ? `— ${d.specialization}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none text-slate-400">
+                        <ChevronRight size={18} className="rotate-90" />
+                      </div>
+                    </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Date and Time Row */}
+                  <div className="grid grid-cols-2 gap-5">
                     <div className="space-y-2">
-                      <label className="block text-sm font-bold text-slate-700">Date</label>
-                      <input 
-                        type="date" 
-                        required 
-                        min={new Date().toISOString().split('T')[0]}
-                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3.5 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-slate-700 outline-hidden"
-                        value={newAppointment.appointmentDate} 
-                        onChange={e => setNewAppointment({...newAppointment, appointmentDate: e.target.value})} 
-                      />
+                      <label className="block text-sm font-bold text-slate-700 ml-1">Date</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-emerald-600">
+                          <CalendarIcon size={18} />
+                        </div>
+                        <input 
+                          type="date" 
+                          required 
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-slate-700 outline-hidden"
+                          value={newAppointment.appointmentDate} 
+                          onChange={e => setNewAppointment({...newAppointment, appointmentDate: e.target.value})} 
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <label className="block text-sm font-bold text-slate-700">Time</label>
-                      <input 
-                        type="time" 
-                        required 
-                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3.5 focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-slate-700 outline-hidden"
-                        value={newAppointment.time} 
-                        onChange={e => setNewAppointment({...newAppointment, time: e.target.value})} 
-                      />
+                      <label className="block text-sm font-bold text-slate-700 ml-1">Time</label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-emerald-600">
+                          <Clock size={18} />
+                        </div>
+                        <input 
+                          type="time" 
+                          required 
+                          className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl pl-11 pr-4 py-3.5 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-semibold text-slate-700 outline-hidden"
+                          value={newAppointment.time} 
+                          onChange={e => setNewAppointment({...newAppointment, time: e.target.value})} 
+                        />
+                      </div>
                     </div>
                   </div>
 
+                  {/* Reason text area */}
                   <div className="space-y-2">
-                    <label className="block text-sm font-bold text-slate-700">Reason for Visit</label>
-                    <textarea 
-                      required 
-                      placeholder="Please briefly describe your symptoms or reason for the visit..."
-                      className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3.5 h-32 resize-none focus:bg-white focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-medium text-slate-700 outline-hidden"
-                      value={newAppointment.reason} 
-                      onChange={e => setNewAppointment({...newAppointment, reason: e.target.value})} 
-                    />
+                    <label className="block text-sm font-bold text-slate-700 ml-1">Reason for Visit</label>
+                    <div className="relative">
+                      <div className="absolute top-4 left-0 pl-4 pointer-events-none text-emerald-600">
+                        <AlignLeft size={20} />
+                      </div>
+                      <textarea 
+                        required 
+                        placeholder="Please describe your symptoms briefly..."
+                        className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl pl-11 pr-4 py-4 h-36 resize-none focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium text-slate-700 outline-hidden"
+                        value={newAppointment.reason} 
+                        onChange={e => setNewAppointment({...newAppointment, reason: e.target.value})} 
+                      />
+                    </div>
                   </div>
                 </form>
               </div>
 
-              <div className="p-6 border-t border-slate-100 bg-slate-50">
-                <div className="flex gap-3">
-                  <button 
-                    type="button" 
-                    onClick={() => setShowModal(false)} 
-                    className="flex-1 py-3.5 font-bold text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-xl transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    form="booking-form"
-                    disabled={isBooking}
-                    className="flex-1 py-3.5 font-bold text-white bg-primary border-2 border-primary hover:bg-primary/90 rounded-xl transition-all flex justify-center items-center gap-2 shadow-lg shadow-primary/20 disabled:opacity-70 disabled:cursor-not-allowed"
-                  >
-                    {isBooking ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
-                    Confirm Booking
-                  </button>
-                </div>
+              {/* Action Buttons */}
+              <div className="p-6 border-t border-slate-100 bg-slate-50 flex gap-3 relative z-30">
+                <button 
+                  type="button" 
+                  onClick={() => setShowModal(false)} 
+                  className="w-1/3 py-3.5 font-bold text-slate-600 bg-white border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-2xl transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  form="booking-form"
+                  disabled={isBooking}
+                  className="flex-1 py-3.5 font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-2xl transition-all flex justify-center items-center gap-2 shadow-lg shadow-emerald-600/30 disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isBooking ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                  Confirm Booking
+                </button>
               </div>
             </motion.div>
           </>
