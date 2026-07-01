@@ -164,8 +164,23 @@ const PatientAppointments = () => {
   const handleBook = async (e) => {
     e.preventDefault();
     try {
-      setIsBooking(true);
       const dateTime = new Date(`${newAppointment.appointmentDate}T${newAppointment.time}`);
+      
+      const now = new Date();
+      // Require at least 30 minutes notice for the doctor
+      const minAllowedTime = new Date(now.getTime() + 30 * 60000);
+      
+      if (dateTime < now) {
+        toast.error("You can't book an appointment in the past! Please select a valid future time.");
+        return;
+      }
+
+      if (dateTime < minAllowedTime) {
+        toast.error("Please book your appointment at least 30 minutes in advance so the doctor can prepare.");
+        return;
+      }
+
+      setIsBooking(true);
       
       await api.createAppointment({
         doctorId: newAppointment.doctorId,
