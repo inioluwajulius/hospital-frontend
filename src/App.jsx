@@ -59,6 +59,8 @@ function App() {
           <Route path="/" element={<Navigate to="/register" replace />} />
           
           {/* ========== AUTH ROUTES (Public) ========== */}
+          <Route path="/auth/login" element={<Navigate to="/auth/login/patient" replace />} />
+          <Route path="/login" element={<Navigate to="/auth/login/patient" replace />} />
           <Route path="/auth/login/:role" element={<Login />} />
           <Route path="/auth/register/:type" element={<Register />} />
           <Route path="/register" element={<RegistrationSelector />} />

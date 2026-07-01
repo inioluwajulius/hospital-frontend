@@ -630,9 +630,9 @@ const Register = () => {
                     </>
                 )}
                         
-                <div className="text-center text-sm text-slate-600 mt-8">
+                        <div className="text-center text-sm text-slate-600 mt-8">
                             Already have an account?{' '}
-                            <Link to="/auth/login" className="text-primary font-bold hover:underline">
+                            <Link to={userType === 'staff' || type === 'doctor' ? "/auth/login/doctor" : "/auth/login/patient"} className="text-primary font-bold hover:underline">
                                 Login here
                             </Link>
                         </div>
