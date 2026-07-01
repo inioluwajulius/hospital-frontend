@@ -106,7 +106,7 @@ const PatientDashboard = () => {
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
         <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold tracking-tight">
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">
             Welcome back, {user?.name?.split(' ')[0] || 'Patient'}
           </h1>
           <p className="text-slate-300 mt-2 font-medium">Here is an overview of your health and upcoming activities.</p>

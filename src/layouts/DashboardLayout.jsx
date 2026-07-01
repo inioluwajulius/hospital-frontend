@@ -30,6 +30,8 @@ const DashboardLayout = () => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     
@@ -57,9 +59,9 @@ const DashboardLayout = () => {
       {/* Toast container for global notifications */}
       <ToastContainer toasts={toasts} removeToast={removeToast} />
       
-      <Header user={user} />
+      <Header user={user} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
       <div className="flex flex-1 overflow-hidden relative z-10">
-        <Sidebar />
+        <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         <main className="flex-1 overflow-y-auto overflow-x-hidden relative scroll-smooth p-4 md:p-8">
           <Outlet />
         </main>

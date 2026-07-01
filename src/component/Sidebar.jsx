@@ -7,10 +7,9 @@ import {
   CreditCard, ShoppingCart, LogOut, Menu, X, User, Building2
 } from "lucide-react";
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(true);
   const [user, setUser] = useState(() => {
     try {
       const userStr = localStorage.getItem('user');
@@ -86,12 +85,6 @@ const Sidebar = () => {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden bg-emerald-600 text-white p-2 rounded-xl shadow-md hover:bg-emerald-700 transition-colors"
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
 
       {isOpen && (
         <div
