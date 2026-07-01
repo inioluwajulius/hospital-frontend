@@ -36,7 +36,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const AppointmentCard = ({ appointment }) => {
+const AppointmentCard = ({ appointment, onCancel }) => {
   const doctorName = appointment.doctorId?.name || 'Unassigned Doctor';
   const department = appointment.doctorId?.specialization || 'General';
   const aptDate = new Date(appointment.appointmentDate);
@@ -75,7 +75,7 @@ const AppointmentCard = ({ appointment }) => {
 
     {appointment.status === 'scheduled' && (
       <div className="mt-5 flex gap-3">
-        <button className="flex-1 bg-white border border-red-200 hover:border-red-300 text-red-600 py-2 rounded-xl text-sm font-bold transition-all hover:bg-red-50">
+        <button onClick={() => onCancel(appointment._id)} className="flex-1 bg-white border border-red-200 hover:border-red-300 text-red-600 py-2 rounded-xl text-sm font-bold transition-all hover:bg-red-50">
           Cancel
         </button>
       </div>
@@ -129,6 +129,18 @@ const PatientAppointments = () => {
     } catch (err) {
       console.error('Failed to book appointment', err);
       alert('Failed to book appointment');
+    }
+  };
+
+  const handleCancel = async (id) => {
+    if (window.confirm('Are you sure you want to cancel this appointment?')) {
+      try {
+        await api.updateAppointment(id, { status: 'cancelled' });
+        fetchData();
+      } catch (err) {
+        console.error('Failed to cancel appointment', err);
+        alert('Failed to cancel appointment');
+      }
     }
   };
 
@@ -202,7 +214,7 @@ const PatientAppointments = () => {
         <h2 className="text-xl font-bold text-slate-900 border-b border-slate-200 pb-2">Upcoming Appointments</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {upcomingAppointments.length > 0 ? (
-            upcomingAppointments.map(apt => <AppointmentCard key={apt.id} appointment={apt} />)
+            upcomingAppointments.map(apt => <AppointmentCard key={apt._id} appointment={apt} onCancel={handleCancel} />)
           ) : (
             <div className="col-span-full p-8 text-center bg-white border border-slate-100 rounded-2xl">
               <CalendarIcon size={48} className="mx-auto text-slate-300 mb-4" />
@@ -216,7 +228,7 @@ const PatientAppointments = () => {
         <h2 className="text-xl font-bold text-slate-900 border-b border-slate-200 pb-2">Past Appointments</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {pastAppointments.map(apt => (
-            <AppointmentCard key={apt.id} appointment={apt} />
+            <AppointmentCard key={apt._id} appointment={apt} onCancel={handleCancel} />
           ))}
         </div>
       </div>
