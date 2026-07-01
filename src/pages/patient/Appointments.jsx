@@ -232,7 +232,7 @@ const PatientAppointments = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => setShowModal(true)}
-          className="bg-primary hover:bg-primary/90 text-white px-6 py-3.5 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-xl shadow-primary/20 transition-all w-full md:w-auto justify-center"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3.5 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-xl shadow-emerald-600/20 transition-all w-full md:w-auto justify-center"
         >
           <Plus size={20} />
           Book Appointment
