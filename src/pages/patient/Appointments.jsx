@@ -9,9 +9,13 @@ import {
   XCircle, 
   AlertCircle,
   X,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, format, addMonths, subMonths, isToday } from 'date-fns';
 import { cn } from '../../lib/utils';
 import { api } from '../../services/api';
 import toast from 'react-hot-toast';
@@ -125,6 +129,7 @@ const PatientAppointments = () => {
   const [isBooking, setIsBooking] = useState(false);
   const [cancellingId, setCancellingId] = useState(null);
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   
   const [newAppointment, setNewAppointment] = useState({
     doctorId: '',
@@ -200,6 +205,21 @@ const PatientAppointments = () => {
   
   const displayedAppointments = activeTab === 'upcoming' ? upcomingAppointments : pastAppointments;
 
+  const stats = {
+    upcoming: upcomingAppointments.length,
+    completed: safeAppointments.filter(a => a.status === 'completed').length,
+    cancelled: safeAppointments.filter(a => a.status === 'cancelled').length,
+    nextAppointment: upcomingAppointments.sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))[0]
+  };
+
+  // Calendar logic
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(monthStart);
+  const startDate = startOfWeek(monthStart);
+  const endDate = endOfWeek(monthEnd);
+  const calendarDays = eachDayOfInterval({ start: startDate, end: endDate });
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
   return (
     <div className="space-y-8 pb-10">
       {/* Header */}
@@ -217,6 +237,40 @@ const PatientAppointments = () => {
           <Plus size={20} />
           Book Appointment
         </motion.button>
+      </div>
+
+      {/* Stats Bar */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center"><CalendarIcon size={24} /></div>
+          <div>
+            <div className="text-2xl font-extrabold text-slate-900">{stats.upcoming}</div>
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Upcoming</div>
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center"><CheckCircle2 size={24} /></div>
+          <div>
+            <div className="text-2xl font-extrabold text-slate-900">{stats.completed}</div>
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Completed</div>
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center"><XCircle size={24} /></div>
+          <div>
+            <div className="text-2xl font-extrabold text-slate-900">{stats.cancelled}</div>
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Cancelled</div>
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
+          <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center"><Activity size={24} /></div>
+          <div className="min-w-0">
+            <div className="text-lg font-extrabold text-slate-900 truncate">
+              {stats.nextAppointment ? format(new Date(stats.nextAppointment.appointmentDate), 'MMM d, h:mm a') : 'None'}
+            </div>
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Next Visit</div>
+          </div>
+        </div>
       </div>
 
       {/* Tabs */}
@@ -239,6 +293,15 @@ const PatientAppointments = () => {
           )}
           <span className="relative z-10 flex items-center gap-2">Past & Cancelled <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded-md text-xs">{pastAppointments.length}</span></span>
         </button>
+        <button 
+          onClick={() => setActiveTab('calendar')}
+          className={cn("px-6 py-2.5 rounded-xl font-bold text-sm transition-all relative", activeTab === 'calendar' ? "text-slate-900" : "text-slate-500 hover:text-slate-700")}
+        >
+          {activeTab === 'calendar' && (
+            <motion.div layoutId="apt-tab" className="absolute inset-0 bg-white rounded-xl shadow-sm" />
+          )}
+          <span className="relative z-10 flex items-center gap-2">Calendar</span>
+        </button>
       </div>
 
       {/* Content */}
@@ -246,6 +309,66 @@ const PatientAppointments = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <SkeletonCard count={3} />
+          </div>
+        ) : activeTab === 'calendar' ? (
+          <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-extrabold text-slate-900">{format(currentMonth, 'MMMM yyyy')}</h3>
+              <div className="flex gap-2">
+                <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors">
+                  <ChevronLeft size={20} />
+                </button>
+                <button onClick={() => setCurrentMonth(new Date())} className="px-4 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-sm font-bold text-slate-600 transition-colors">
+                  Today
+                </button>
+                <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors">
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-7 gap-px bg-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
+              {weekDays.map(day => (
+                <div key={day} className="bg-slate-50 py-3 text-center text-xs font-extrabold text-slate-500 uppercase tracking-wider">
+                  {day}
+                </div>
+              ))}
+              {calendarDays.map((day, idx) => {
+                const dayAppointments = safeAppointments.filter(apt => apt.appointmentDate && isSameDay(new Date(apt.appointmentDate), day) && apt.status !== 'cancelled');
+                
+                return (
+                  <div 
+                    key={day.toString()} 
+                    className={cn(
+                      "min-h-[100px] bg-white p-2 transition-colors relative group",
+                      !isSameMonth(day, currentMonth) && "bg-slate-50/50 text-slate-400",
+                      isToday(day) && "bg-indigo-50/30"
+                    )}
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className={cn(
+                        "text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full",
+                        isToday(day) ? "bg-indigo-600 text-white shadow-md shadow-indigo-200" : "text-slate-700"
+                      )}>
+                        {format(day, 'd')}
+                      </span>
+                    </div>
+                    <div className="mt-2 space-y-1">
+                      {dayAppointments.slice(0, 3).map((apt, i) => (
+                        <div key={i} className="px-2 py-1 bg-indigo-50 text-indigo-700 rounded-md text-[10px] font-bold truncate border border-indigo-100/50">
+                          {new Date(apt.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Dr. {apt.doctorId?.name?.split(' ')[0]}
+                        </div>
+                      ))}
+                      {dayAppointments.length > 3 && (
+                        <div className="text-[10px] font-bold text-slate-500 px-1">
+                          +{dayAppointments.length - 3} more
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : displayedAppointments.length > 0 ? (
           <motion.div 
