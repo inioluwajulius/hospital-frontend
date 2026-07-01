@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
-import { format, addDays, startOfWeek } from 'date-fns';
+import { format, addDays, startOfWeek, startOfMonth, endOfMonth, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { SkeletonCard } from '../../component/SkeletonLoader';
@@ -40,15 +40,20 @@ const Appointments = () => {
   const [typeFilter, setTypeFilter] = useState('All');
   const [statusFilters, setStatusFilters] = useState(['Scheduled', 'In-Progress', 'Completed']);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+
+  const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+  const currentUser = userStr ? JSON.parse(userStr) : null;
+
   const [formData, setFormData] = useState({
     patientId: '',
     patientName: '',
-    doctorId: '1',
-    doctorName: 'Dr. Julius Ini',
+    doctorId: currentUser?.id || currentUser?._id || '1',
+    doctorName: currentUser?.name || 'Dr. Julius Ini',
     date: format(new Date(), 'yyyy-MM-dd'),
     time: '09:00 AM',
     reason: '',
@@ -56,9 +61,23 @@ const Appointments = () => {
   });
   const [errors, setErrors] = useState({});
 
-  const today = new Date();
-  const weekStart = startOfWeek(today);
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const currentWeekStart = startOfWeek(selectedDate);
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i));
+  const activeMonthYear = format(currentWeekStart, 'MMMM yyyy');
+
+  const prevWeek = () => setSelectedDate(prev => addDays(prev, -7));
+  const nextWeek = () => setSelectedDate(prev => addDays(prev, 7));
+
+  // Calendar specific calculations
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const calendarStart = startOfWeek(monthStart);
+  const calendarEnd = endOfWeek(monthEnd);
+  const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+
+  const prevMonth = () => setCurrentMonth(prev => addDays(prev, -30));
+  const nextMonth = () => setCurrentMonth(prev => addDays(prev, 30));
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,7 +100,28 @@ const Appointments = () => {
   }, []);
 
   const handleExport = () => {
-    toast.success('Schedule exported successfully!');
+    try {
+      const headers = ['Date', 'Time', 'Patient', 'Type', 'Status', 'Doctor'];
+      const csvData = filteredAppointments.map(apt => [
+        format(apt.dateObj, 'yyyy-MM-dd'),
+        apt.time,
+        apt.patientName,
+        apt.type || 'Checkup',
+        apt.status || 'Scheduled',
+        apt.doctorName
+      ]);
+      const csvContent = [headers, ...csvData].map(e => e.join(",")).join("\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `schedule_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Schedule exported successfully!');
+    } catch (error) {
+      toast.error('Failed to export schedule');
+    }
   };
 
   const handleInputChange = (e) => {
@@ -143,6 +183,19 @@ const Appointments = () => {
     }
   };
 
+  const handleUpdateStatus = async (id, status) => {
+    try {
+      await api.updateAppointment(id, { status });
+      setAppointments(prev => prev.map(a => a._id === id || a.id === id ? { ...a, status } : a));
+      toast.success(`Appointment marked as ${status}`);
+      if (selectedAppointment && (selectedAppointment.id === id || selectedAppointment._id === id)) {
+        setSelectedAppointment(prev => ({ ...prev, status }));
+      }
+    } catch (error) {
+      toast.error('Failed to update status');
+    }
+  };
+
   const processedAppointments = useMemo(() => {
     return appointments.map(apt => {
       const pName = apt.patientId?.userId?.name || apt.patientId?.name || 'Unknown';
@@ -161,14 +214,25 @@ const Appointments = () => {
         apt.type?.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = typeFilter === 'All' || apt.type === typeFilter;
       const matchesStatus = statusFilters.length === 0 || statusFilters.includes(apt.status) || (apt.status === undefined && statusFilters.includes('Scheduled'));
-      return matchesSearch && matchesType && matchesStatus;
+      const matchesDate = format(apt.dateObj, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
+      return matchesSearch && matchesType && matchesStatus && matchesDate;
     });
-  }, [processedAppointments, searchQuery, typeFilter, statusFilters]);
+  }, [processedAppointments, searchQuery, typeFilter, statusFilters, selectedDate]);
 
-  const todayCount = processedAppointments.filter(a => {
-    const d = new Date(a.appointmentDate);
-    return d.toDateString() === new Date().toDateString();
-  }).length;
+  const stats = useMemo(() => {
+    const today = new Date().toDateString();
+    const todayApts = processedAppointments.filter(a => new Date(a.dateObj).toDateString() === today);
+    const completed = todayApts.filter(a => a.status === 'Completed').length;
+    const cancelled = todayApts.filter(a => a.status === 'Cancelled').length;
+    const noShowRate = todayApts.length ? Math.round((cancelled / todayApts.length) * 100) : 0;
+    
+    return {
+      total: todayApts.length,
+      completed,
+      cancelled,
+      noShowRate
+    };
+  }, [processedAppointments]);
 
   if (loading) {
     return (
@@ -227,6 +291,37 @@ const Appointments = () => {
           </button>
         </div>
       </motion.div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><CalendarIcon size={24} /></div>
+          <div>
+            <div className="text-2xl font-extrabold text-slate-900">{stats.total}</div>
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Today's Visits</div>
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center"><CheckCircle2 size={24} /></div>
+          <div>
+            <div className="text-2xl font-extrabold text-slate-900">{stats.completed}</div>
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Completed</div>
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-red-50 text-red-600 rounded-xl flex items-center justify-center"><X size={24} /></div>
+          <div>
+            <div className="text-2xl font-extrabold text-slate-900">{stats.cancelled}</div>
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Cancellations</div>
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center"><Activity size={24} /></div>
+          <div>
+            <div className="text-2xl font-extrabold text-slate-900">{stats.noShowRate}%</div>
+            <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">No-Show Rate</div>
+          </div>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <motion.div 
@@ -334,25 +429,26 @@ const Appointments = () => {
               >
                 <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
                   <div className="flex items-center justify-between w-full md:w-auto gap-4">
-                    <h3 className="text-xl font-extrabold text-slate-900">{format(today, 'MMMM yyyy')}</h3>
+                    <h3 className="text-xl font-extrabold text-slate-900">{activeMonthYear}</h3>
                     <div className="flex gap-2">
-                      <button className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 transition-all">
+                      <button onClick={prevWeek} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 transition-all">
                         <ChevronLeft size={20} />
                       </button>
-                      <button className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 transition-all">
+                      <button onClick={nextWeek} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 transition-all">
                         <ChevronRight size={20} />
                       </button>
                     </div>
                   </div>
                   <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 no-scrollbar custom-scrollbar">
                     {weekDays.map((day, i) => {
-                      const isToday = format(day, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+                      const isSelected = format(day, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
                       return (
                         <button 
                           key={i} 
+                          onClick={() => setSelectedDate(day)}
                           className={cn(
                             "flex flex-col items-center p-3 rounded-2xl min-w-[72px] transition-all",
-                            isToday ? "bg-primary text-white shadow-lg shadow-primary/20 border border-primary/20" : "bg-slate-50 text-slate-500 border border-slate-100 hover:bg-white hover:border-primary/30"
+                            isSelected ? "bg-primary text-white shadow-lg shadow-primary/20 border border-primary/20" : "bg-slate-50 text-slate-500 border border-slate-100 hover:bg-white hover:border-primary/30"
                           )}
                         >
                           <span className="text-[10px] font-bold uppercase tracking-widest mb-1 opacity-80">{format(day, 'EEE')}</span>
@@ -463,19 +559,102 @@ const Appointments = () => {
               </motion.div>
             )}
             
-            {activeTab !== 'schedule' && (
+            {activeTab === 'calendar' && (
               <motion.div
-                key="other"
+                key="calendar"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="bg-white rounded-3xl border border-slate-100 shadow-sm p-12 flex flex-col items-center justify-center min-h-[400px]"
+                className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6"
               >
-                <div className="w-20 h-20 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mb-6">
-                  {activeTab === 'calendar' ? <CalendarDays size={40} /> : <Clock size={40} />}
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-extrabold text-slate-900">{format(currentMonth, 'MMMM yyyy')}</h3>
+                  <div className="flex gap-2">
+                    <button onClick={prevMonth} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 transition-all">
+                      <ChevronLeft size={20} />
+                    </button>
+                    <button onClick={nextMonth} className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 transition-all">
+                      <ChevronRight size={20} />
+                    </button>
+                  </div>
                 </div>
-                <h3 className="text-xl font-extrabold text-slate-900 mb-2 capitalize">{activeTab} View</h3>
-                <p className="text-slate-500 font-medium text-center max-w-sm">This module is currently under development. Please check back later.</p>
+                
+                <div className="grid grid-cols-7 gap-px bg-slate-200 border border-slate-200 rounded-2xl overflow-hidden">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                    <div key={day} className="bg-slate-50 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-widest">
+                      {day}
+                    </div>
+                  ))}
+                  
+                  {calendarDays.map((day, i) => {
+                    const dayAppointments = processedAppointments.filter(apt => isSameDay(apt.dateObj, day));
+                    return (
+                      <div 
+                        key={i} 
+                        className={cn(
+                          "bg-white min-h-[100px] p-2 transition-all hover:bg-slate-50",
+                          !isSameMonth(day, currentMonth) && "opacity-40"
+                        )}
+                        onClick={() => {
+                          setSelectedDate(day);
+                          setActiveTab('schedule');
+                        }}
+                      >
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold mb-2",
+                          isSameDay(day, new Date()) ? "bg-primary text-white" : "text-slate-700"
+                        )}>
+                          {format(day, 'd')}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          {dayAppointments.slice(0, 3).map((apt, j) => (
+                            <div key={j} className="text-[10px] px-2 py-1 rounded bg-slate-100 text-slate-700 font-bold truncate">
+                              {apt.time} - {apt.patientName}
+                            </div>
+                          ))}
+                          {dayAppointments.length > 3 && (
+                            <div className="text-[10px] text-slate-500 font-medium pl-1">
+                              +{dayAppointments.length - 3} more
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'waitlist' && (
+              <motion.div
+                key="waitlist"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6"
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-amber-100 text-amber-600 rounded-2xl">
+                    <Clock size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-extrabold text-slate-900">Waitlist Management</h3>
+                    <p className="text-sm font-medium text-slate-500">Patients waiting for earlier available slots</p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-12 flex flex-col items-center justify-center text-center">
+                  <h4 className="text-lg font-bold text-slate-700 mb-2">No Patients on Waitlist</h4>
+                  <p className="text-slate-500 font-medium max-w-sm">
+                    Currently, there are no patients requesting to be moved to an earlier slot. When a slot opens up, you can easily drag and drop patients from this list.
+                  </p>
+                  <button 
+                    onClick={() => toast('Waitlist logic to be fully integrated with backend soon!', { icon: '🚧' })}
+                    className="mt-6 px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-all active:scale-95"
+                  >
+                    Add to Waitlist Manually
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -771,18 +950,72 @@ const Appointments = () => {
                   </div>
                 </div>
 
+                <div className="space-y-4">
+                  <h5 className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest flex items-center gap-3">
+                    Quick Patient History
+                    <div className="h-px bg-slate-200 flex-1"></div>
+                  </h5>
+                  <div className="space-y-3">
+                    {(() => {
+                      const pastApts = processedAppointments.filter(a => 
+                        (a.patientId === selectedAppointment.patientId || a.patientId?._id === selectedAppointment.patientId?._id) && 
+                        a.id !== selectedAppointment.id && a.dateObj < new Date()
+                      ).slice(0, 3);
+                      
+                      if (pastApts.length === 0) return <div className="text-sm text-slate-500 text-center py-4 bg-slate-50 rounded-xl border border-slate-100 font-medium">No previous visits found.</div>;
+                      
+                      return pastApts.map((apt, i) => (
+                        <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:border-primary/30 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="text-sm font-extrabold text-slate-800">{format(apt.dateObj, 'MMM d, yyyy')}</span>
+                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md uppercase tracking-wider">{apt.type}</span>
+                          </div>
+                          <p className="text-xs text-slate-600 line-clamp-2 font-medium">{apt.reason || 'No reason provided'}</p>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+
                 {selectedAppointment.type === 'Consultation' && (
-                  <button className="w-full py-4 bg-indigo-600 text-white font-extrabold rounded-2xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-3">
+                  <button 
+                    onClick={() => {
+                      toast.loading('Starting secure telemedicine session...');
+                      setTimeout(() => toast.dismiss(), 2000);
+                    }}
+                    className="w-full py-4 bg-indigo-600 text-white font-extrabold rounded-2xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-3">
                     <Video size={20} />
                     Start Telemedicine Session
                   </button>
                 )}
 
+                {(!selectedAppointment.status || selectedAppointment.status === 'Scheduled') && (
+                  <button 
+                    onClick={() => handleUpdateStatus(selectedAppointment.id || selectedAppointment._id, 'In-Progress')}
+                    className="w-full py-4 bg-emerald-600 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-3">
+                    <CheckCircle2 size={20} />
+                    Check-In Patient
+                  </button>
+                )}
+
+                {selectedAppointment.status === 'In-Progress' && (
+                  <button 
+                    onClick={() => handleUpdateStatus(selectedAppointment.id || selectedAppointment._id, 'Completed')}
+                    className="w-full py-4 bg-blue-600 text-white font-extrabold rounded-2xl shadow-lg shadow-blue-600/20 hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-3">
+                    <CheckCircle2 size={20} />
+                    Mark as Completed
+                  </button>
+                )}
+
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-200">
-                  <button className="w-full py-3.5 bg-white border border-slate-200 text-slate-700 font-extrabold rounded-2xl hover:bg-slate-50 transition-all active:scale-95 shadow-sm">
+                  <button 
+                    onClick={() => toast('Reschedule modal coming soon!', { icon: '🗓️' })}
+                    className="w-full py-3.5 bg-white border border-slate-200 text-slate-700 font-extrabold rounded-2xl hover:bg-slate-50 transition-all active:scale-95 shadow-sm">
                     Reschedule
                   </button>
-                  <button className="w-full py-3.5 bg-white border border-red-200 text-red-600 font-extrabold rounded-2xl hover:bg-red-50 transition-all active:scale-95 shadow-sm">
+                  <button 
+                    onClick={() => handleUpdateStatus(selectedAppointment.id || selectedAppointment._id, 'Cancelled')}
+                    className="w-full py-3.5 bg-white border border-red-200 text-red-600 font-extrabold rounded-2xl hover:bg-red-50 transition-all active:scale-95 shadow-sm">
                     Cancel
                   </button>
                 </div>
