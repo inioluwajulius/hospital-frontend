@@ -420,25 +420,21 @@ const PatientAppointments = () => {
               className="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-white shadow-2xl flex flex-col border-l border-slate-100"
             >
               {/* Modal Header */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-700 p-8 pb-10">
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
-                <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-24 h-24 bg-black/10 rounded-full blur-xl"></div>
-                <div className="relative z-10 flex items-start justify-between">
-                  <div>
-                    <h2 className="text-2xl font-extrabold text-white tracking-tight">Book Appointment</h2>
-                    <p className="text-emerald-100 font-medium text-sm mt-1">Schedule a visit with our specialists</p>
-                  </div>
-                  <button 
-                    onClick={() => setShowModal(false)}
-                    className="p-2 text-white/80 hover:text-white hover:bg-white/20 rounded-full transition-colors backdrop-blur-md"
-                  >
-                    <X size={24} />
-                  </button>
+              <div className="flex items-center justify-between p-6 border-b border-slate-100 bg-white">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Book Appointment</h2>
+                  <p className="text-slate-500 font-medium text-xs mt-1">Schedule a visit with our specialists</p>
                 </div>
+                <button 
+                  onClick={() => setShowModal(false)}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"
+                >
+                  <X size={24} />
+                </button>
               </div>
 
               {/* Form Content */}
-              <div className="flex-1 overflow-y-auto px-6 py-8 -mt-6 bg-white rounded-t-3xl relative z-20">
+              <div className="flex-1 overflow-y-auto px-6 py-8 bg-white relative z-20">
                 <form id="booking-form" onSubmit={handleBook} className="space-y-6">
                   
                   {/* Doctor Selection */}
