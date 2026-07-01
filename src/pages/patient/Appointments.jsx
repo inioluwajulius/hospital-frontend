@@ -40,6 +40,7 @@ const AppointmentCard = ({ appointment }) => {
   const doctorName = appointment.doctorId?.name || 'Unassigned Doctor';
   const department = appointment.doctorId?.specialization || 'General';
   const aptDate = new Date(appointment.appointmentDate);
+  const isValidDate = !isNaN(aptDate.getTime());
 
   return (
   <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all group">
@@ -54,11 +55,11 @@ const AppointmentCard = ({ appointment }) => {
     <div className="grid grid-cols-2 gap-3 mb-4">
       <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
         <CalendarIcon size={16} className="text-slate-400" />
-        {aptDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        {isValidDate ? aptDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD'}
       </div>
       <div className="flex items-center gap-2 text-sm text-slate-600 font-medium">
         <Clock size={16} className="text-slate-400" />
-        {aptDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        {isValidDate ? aptDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'TBD'}
       </div>
       <div className="flex items-center gap-2 text-sm text-slate-600 font-medium col-span-2">
         <MapPin size={16} className="text-slate-400" />
@@ -131,8 +132,9 @@ const PatientAppointments = () => {
     }
   };
 
-  const upcomingAppointments = appointments.filter(a => new Date(a.appointmentDate) >= new Date() && a.status !== 'cancelled');
-  const pastAppointments = appointments.filter(a => new Date(a.appointmentDate) < new Date() || a.status === 'cancelled');
+  const safeAppointments = Array.isArray(appointments) ? appointments : [];
+  const upcomingAppointments = safeAppointments.filter(a => a?.appointmentDate && new Date(a.appointmentDate) >= new Date() && a.status !== 'cancelled');
+  const pastAppointments = safeAppointments.filter(a => !a?.appointmentDate || new Date(a.appointmentDate) < new Date() || a.status === 'cancelled');
   return (
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
