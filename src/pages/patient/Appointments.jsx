@@ -12,7 +12,9 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
-  Activity
+  Activity,
+  Stethoscope,
+  AlignLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, format, addMonths, subMonths, isToday } from 'date-fns';
