@@ -202,8 +202,11 @@ const PatientAppointments = () => {
   };
 
   const safeAppointments = Array.isArray(appointments) ? appointments : [];
-  const upcomingAppointments = safeAppointments.filter(a => a?.appointmentDate && new Date(a.appointmentDate) >= new Date() && a.status !== 'cancelled');
-  const pastAppointments = safeAppointments.filter(a => !a?.appointmentDate || new Date(a.appointmentDate) < new Date() || a.status === 'cancelled');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const upcomingAppointments = safeAppointments.filter(a => a?.appointmentDate && new Date(a.appointmentDate) >= today && a.status !== 'cancelled');
+  const pastAppointments = safeAppointments.filter(a => !a?.appointmentDate || new Date(a.appointmentDate) < today || a.status === 'cancelled');
   
   const displayedAppointments = activeTab === 'upcoming' ? upcomingAppointments : pastAppointments;
 
