@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
+import { Toaster } from "react-hot-toast";
 import "./App.css";
 
 // Error Boundary
@@ -52,6 +53,7 @@ import NotFound from "./pages/NotFound";
 function App() {
   return (
     <ErrorBoundary>
+      <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: '#1e293b', color: '#fff' } }} />
       <BrowserRouter>
         <Analytics />
         <Routes>

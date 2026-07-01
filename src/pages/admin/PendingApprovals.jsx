@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, Loader2, AlertCircle, RefreshCw, Users, Stethoscope } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, AlertCircle, RefreshCw, Users, Stethoscope, Mail, Award, Clock } from 'lucide-react';
 import { api } from '../../services/api';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { EmptyState } from '../../component/EmptyState';
+import { SkeletonCard } from '../../component/SkeletonLoader';
 
 const PendingApprovals = () => {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approving, setApproving] = useState({});
   const [rejecting, setRejecting] = useState({});
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     fetchPendingData();
@@ -17,14 +19,11 @@ const PendingApprovals = () => {
   const fetchPendingData = async () => {
     try {
       setLoading(true);
-      setError('');
-      
-      // Fetch pending doctors
       const doctorsResponse = await api.get('/users/registrations/pending');
       const pendingDoctors = doctorsResponse.data?.filter(user => user.role === 'doctor') || doctorsResponse.data || [];
       setDoctors(pendingDoctors);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to fetch pending registrations');
+      toast.error(err?.response?.data?.message || 'Failed to fetch pending registrations');
       console.error('Error fetching pending registrations:', err);
     } finally {
       setLoading(false);
@@ -34,13 +33,11 @@ const PendingApprovals = () => {
   const handleApproveDoctor = async (doctorId) => {
     try {
       setApproving(prev => ({ ...prev, [doctorId]: true }));
-      setError('');
       await api.put(`/users/${doctorId}/approve`);
-      setSuccess('Doctor approved successfully!');
+      toast.success('Doctor approved successfully!');
       setDoctors(prev => prev.filter(d => d._id !== doctorId));
-      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to approve doctor');
+      toast.error(err?.response?.data?.message || 'Failed to approve doctor');
       console.error('Approval error:', err);
     } finally {
       setApproving(prev => ({ ...prev, [doctorId]: false }));
@@ -50,103 +47,138 @@ const PendingApprovals = () => {
   const handleRejectDoctor = async (doctorId) => {
     try {
       setRejecting(prev => ({ ...prev, [doctorId]: true }));
-      setError('');
       await api.put(`/users/${doctorId}/reject`, { reason: 'Documents invalid or rejected' });
-      setSuccess('Doctor rejected successfully');
+      toast.success('Doctor rejected successfully');
       setDoctors(prev => prev.filter(d => d._id !== doctorId));
-      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError(err?.response?.data?.message || 'Failed to reject doctor');
+      toast.error(err?.response?.data?.message || 'Failed to reject doctor');
       console.error('Rejection error:', err);
     } finally {
       setRejecting(prev => ({ ...prev, [doctorId]: false }));
     }
   };
 
-
-
   if (loading) {
     return (
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="space-y-8">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Pending Approvals</h2>
-          <p className="text-slate-500 text-sm mt-1">Review and approve new registrations.</p>
+          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Pending Approvals</h2>
+          <p className="text-slate-500 font-medium mt-2">Loading pending approvals...</p>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 flex items-center justify-center">
-          <Loader2 className="animate-spin text-primary mr-2" size={20} />
-          <span>Loading pending approvals...</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <SkeletonCard count={3} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8">
-      <div className="flex justify-between items-center">
+    <div className="space-y-8 pb-10">
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white p-6 md:p-8 rounded-3xl shadow-xs border border-slate-100"
+      >
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Pending Approvals</h2>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3 mb-2">
+            <div className="p-2.5 bg-amber-500/10 rounded-2xl text-amber-600">
+              <Users size={28} />
+            </div>
+            Pending Approvals
+          </h1>
+          <p className="text-slate-500 font-medium">Review and approve new registrations and account requests.</p>
         </div>
-      </div>
-      <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-white/50 shadow-xl shadow-slate-200/30 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
-        <div className="p-6 border-b border-slate-200/50 bg-slate-50/50">
-          <h3 className="font-black text-slate-900 text-lg">Pending Doctor Registrations</h3>
-          <p className="text-xs text-slate-500 mt-1 font-medium">
-            {doctors.length} doctor{doctors.length !== 1 ? 's' : ''} awaiting approval
-          </p>
-        </div>
+        <button 
+          onClick={fetchPendingData}
+          className="bg-white border border-slate-200 text-slate-700 px-6 py-3 rounded-2xl font-bold text-sm flex justify-center items-center gap-2 shadow-sm hover:bg-slate-50 transition-all active:scale-95"
+        >
+          <RefreshCw size={18} />
+          Refresh List
+        </button>
+      </motion.div>
 
-        {doctors.length === 0 ? (
-          <div className="p-8 text-center text-slate-500 text-sm">
-            No pending doctor approvals.
+      {doctors.length === 0 ? (
+        <EmptyState
+          icon={CheckCircle2}
+          title="All Caught Up!"
+          description="There are no pending doctor registrations awaiting your approval at this time."
+        />
+      ) : (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-extrabold text-slate-900">Doctor Registrations</h2>
+            <span className="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
+              {doctors.length} Pending
+            </span>
           </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {doctors.map((doctor) => (
-              <div key={doctor._id} className="p-6 hover:bg-slate-50 transition-colors">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Doctor Name</p>
-                      <p className="text-sm font-bold text-slate-900">{doctor.name || 'N/A'}</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <AnimatePresence>
+              {doctors.map((doctor, idx) => (
+                <motion.div 
+                  layout
+                  key={doctor._id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: idx * 0.05 }}
+                  className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl transition-all flex flex-col group"
+                >
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center text-xl font-black group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300">
+                      {doctor.name?.charAt(0) || 'D'}
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Email</p>
-                      <p className="text-sm text-slate-700">{doctor.email || 'N/A'}</p>
+                    <span className="bg-amber-50 text-amber-600 border border-amber-200/50 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                      Pending
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-extrabold text-slate-900 mb-1">{doctor.name || 'Unknown User'}</h3>
+                  <p className="text-sm font-bold text-primary mb-6">{doctor.specialization || 'General Practice'}</p>
+
+                  <div className="space-y-4 mb-8 flex-1">
+                    <div className="bg-slate-50 p-4 rounded-2xl space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Mail size={16} className="text-slate-400" />
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Email</p>
+                          <p className="text-sm font-bold text-slate-700 truncate">{doctor.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Award size={16} className="text-slate-400" />
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">License No.</p>
+                          <p className="text-sm font-bold text-slate-700">{doctor.licenseNumber || 'Not provided'}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Specialization</p>
-                      <p className="text-sm text-slate-700">{doctor.specialization || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">License Number</p>
-                      <p className="text-sm text-slate-700">{doctor.licenseNumber || 'N/A'}</p>
-                    </div>
-                  </div>
-                </div>
 
-                <div className="mt-6 flex gap-3">
-                  <button
-                    onClick={() => handleApproveDoctor(doctor._id)}
-                    disabled={approving[doctor._id] || rejecting[doctor._id]}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500/10 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-sm"
-                  >
-                    {approving[doctor._id] ? 'Approving...' : 'Approve'}
-                  </button>
-                  <button
-                    onClick={() => handleRejectDoctor(doctor._id)}
-                    disabled={rejecting[doctor._id] || approving[doctor._id]}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 text-red-600 rounded-xl hover:bg-red-500 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all font-bold text-sm"
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
-            ))}
+                  <div className="flex gap-3 mt-auto">
+                    <button
+                      onClick={() => handleRejectDoctor(doctor._id)}
+                      disabled={rejecting[doctor._id] || approving[doctor._id]}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-2xl hover:bg-red-50 hover:text-red-600 hover:border-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-extrabold text-sm shadow-sm"
+                    >
+                      {rejecting[doctor._id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle size={18} />}
+                      Reject
+                    </button>
+                    <button
+                      onClick={() => handleApproveDoctor(doctor._id)}
+                      disabled={approving[doctor._id] || rejecting[doctor._id]}
+                      className="flex-[1.5] flex items-center justify-center gap-2 px-4 py-3.5 bg-primary text-white rounded-2xl hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-extrabold text-sm shadow-lg shadow-primary/20"
+                    >
+                      {approving[doctor._id] ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 size={18} />}
+                      Approve
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
