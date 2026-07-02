@@ -62,8 +62,8 @@ const AppointmentCard = ({ appointment, onCancel, isCancelling }) => {
       exit={{ opacity: 0, scale: 0.95 }}
       className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all group flex flex-col h-full"
     >
-      <div className="flex justify-between items-start mb-6 gap-3">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className="flex flex-wrap justify-between items-start mb-6 gap-3">
+        <div className="flex items-center gap-3 min-w-[150px] flex-1">
           <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0", appointment.isUrgent ? "bg-red-50 text-red-600" : "bg-indigo-50 text-indigo-600")}>
             <User size={24} />
           </div>
@@ -78,7 +78,7 @@ const AppointmentCard = ({ appointment, onCancel, isCancelling }) => {
                 </span>
               )}
             </div>
-            <p className="text-sm font-medium text-slate-500">{department}</p>
+            <p className="text-sm font-medium text-slate-500 truncate">{department}</p>
           </div>
         </div>
         <StatusBadge status={appointment.status} />
@@ -405,7 +405,7 @@ const PatientAppointments = () => {
         ) : displayedAppointments.length > 0 ? (
           <motion.div 
             layout
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+            className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6"
           >
             <AnimatePresence mode="popLayout">
               {displayedAppointments.map(apt => (
