@@ -14,18 +14,17 @@ export const CurrencyProvider = ({ children }) => {
   const formatAmount = (amount) => {
     const numAmount = parseFloat(amount) || 0;
     
-    // Select appropriate locale based on currency for better formatting
-    let locale = 'en-US';
-    if (currency === 'NGN') locale = 'en-NG';
-    else if (currency === 'EUR') locale = 'en-DE';
-    else if (currency === 'GBP') locale = 'en-GB';
-
-    return numAmount.toLocaleString(locale, {
-      style: 'currency',
-      currency: currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
+    try {
+      return numAmount.toLocaleString(undefined, {
+        style: 'currency',
+        currency: currency,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    } catch (e) {
+      // Fallback if an invalid currency is somehow set
+      return `${currency} ${numAmount.toFixed(2)}`;
+    }
   };
 
   return (

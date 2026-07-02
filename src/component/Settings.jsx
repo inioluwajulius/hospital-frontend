@@ -12,6 +12,7 @@ import {
   Palette
 } from 'lucide-react';
 import { useCurrency } from '../contexts/CurrencyContext';
+import { WORLD_CURRENCIES } from '../constants/currencies';
 
 const SettingItem = ({ icon: Icon, title, description, badge, onClick }) => (
   <button onClick={onClick} className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-200">
@@ -136,10 +137,11 @@ export const Settings = () => {
                   onChange={(e) => setCurrency(e.target.value)}
                   className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 block p-2 font-medium shadow-sm outline-none transition-all cursor-pointer hover:border-emerald-300"
                 >
-                  <option value="NGN">Naira (₦)</option>
-                  <option value="USD">USD ($)</option>
-                  <option value="EUR">Euro (€)</option>
-                  <option value="GBP">Pound (£)</option>
+                  {WORLD_CURRENCIES.map(curr => (
+                    <option key={curr.code} value={curr.code}>
+                      {curr.name} ({curr.code})
+                    </option>
+                  ))}
                 </select>
               </div>
               <SettingItem 
