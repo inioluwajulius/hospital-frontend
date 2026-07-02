@@ -137,7 +137,8 @@ const PatientAppointments = () => {
     doctorId: '',
     appointmentDate: '',
     time: '',
-    reason: ''
+    reason: '',
+    isUrgent: false
   });
 
   useEffect(() => {
@@ -175,7 +176,7 @@ const PatientAppointments = () => {
         return;
       }
 
-      if (dateTime < minAllowedTime) {
+      if (!newAppointment.isUrgent && dateTime < minAllowedTime) {
         toast.error("Please book your appointment at least 30 minutes in advance so the doctor can prepare.");
         return;
       }
@@ -185,12 +186,13 @@ const PatientAppointments = () => {
       await api.createAppointment({
         doctorId: newAppointment.doctorId,
         appointmentDate: dateTime,
-        reason: newAppointment.reason
+        reason: newAppointment.reason,
+        isUrgent: newAppointment.isUrgent
       });
       
       toast.success('Appointment booked successfully!');
       setShowModal(false);
-      setNewAppointment({ doctorId: '', appointmentDate: '', time: '', reason: '' });
+      setNewAppointment({ doctorId: '', appointmentDate: '', time: '', reason: '', isUrgent: false });
       fetchData();
     } catch (err) {
       console.error('Failed to book appointment', err);
@@ -531,6 +533,21 @@ const PatientAppointments = () => {
                         onChange={e => setNewAppointment({...newAppointment, reason: e.target.value})} 
                       />
                     </div>
+                  </div>
+
+                  {/* Urgent Checkbox */}
+                  <div className="flex items-center gap-3 bg-red-50 p-4 rounded-2xl border border-red-100">
+                    <input
+                      type="checkbox"
+                      id="isUrgent"
+                      checked={newAppointment.isUrgent}
+                      onChange={e => setNewAppointment({...newAppointment, isUrgent: e.target.checked})}
+                      className="w-5 h-5 text-red-600 border-red-300 rounded focus:ring-red-500"
+                    />
+                    <label htmlFor="isUrgent" className="text-sm font-bold text-red-900 cursor-pointer select-none">
+                      This is an emergency / urgent matter
+                      <p className="text-xs font-medium text-red-600/80 mt-0.5">Bypasses the 30-minute advance notice rule</p>
+                    </label>
                   </div>
                 </form>
               </div>
