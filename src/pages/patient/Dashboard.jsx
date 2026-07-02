@@ -184,12 +184,12 @@ const PatientDashboard = () => {
                     {new Date(nextAppointment.appointmentDate).getDate()}
                   </span>
                 </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 text-lg group-hover:text-primary transition-colors">{nextAppointment.reason || 'General Checkup'}</h4>
-                  <p className="text-sm text-slate-500 font-medium mb-3">Dr. {nextAppointment.doctorId?.name || 'Assigned Doctor'} • {nextAppointment.doctorId?.specialization || 'General'}</p>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-slate-900 text-lg group-hover:text-primary transition-colors truncate">{nextAppointment.reason || 'General Checkup'}</h4>
+                  <p className="text-sm text-slate-500 font-medium mb-3 truncate">Dr. {nextAppointment.doctorId?.name || 'Assigned Doctor'} • {nextAppointment.doctorId?.specialization || 'General'}</p>
                   <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 inline-flex shadow-sm">
-                    <Clock size={14} className="text-primary" />
-                    {new Date(nextAppointment.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    <Clock size={14} className="text-primary shrink-0" />
+                    <span className="truncate">{new Date(nextAppointment.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
               </div>
@@ -235,16 +235,16 @@ const PatientDashboard = () => {
                 {activePrescriptions.map((presc) => (
                   presc.medications?.map((med, idx) => (
                     <div key={`${presc._id}-${idx}`} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-slate-100 transition-colors">
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
                         <div className="p-3 bg-blue-100 text-blue-600 rounded-xl shrink-0">
                           <Pill size={20} />
                         </div>
-                        <div>
-                          <h4 className="font-bold text-slate-900">{med.name}</h4>
-                          <p className="text-xs text-slate-500 font-medium mt-1">{med.dosage} • {med.frequency}</p>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-slate-900 truncate">{med.name}</h4>
+                          <p className="text-xs text-slate-500 font-medium mt-1 truncate">{med.dosage} • {med.frequency}</p>
                         </div>
                       </div>
-                      <ArrowRight size={16} className="text-slate-300" />
+                      <ArrowRight size={16} className="text-slate-300 shrink-0 ml-4" />
                     </div>
                   ))
                 ))}
