@@ -69,7 +69,9 @@ const AppointmentCard = ({ appointment, onCancel, isCancelling }) => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h4 className="font-bold text-lg text-slate-900 group-hover:text-primary transition-colors">Dr. {doctorName}</h4>
+              <h4 className="font-bold text-lg text-slate-900 group-hover:text-primary transition-colors">
+                {doctorName.startsWith('Dr.') || doctorName.startsWith('Dr ') ? doctorName : `Dr. ${doctorName}`}
+              </h4>
               {appointment.isUrgent && (
                 <span className="bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                   <AlertCircle size={10} /> URGENT
@@ -480,7 +482,7 @@ const PatientAppointments = () => {
                         <option value="" disabled className="text-slate-400">-- Choose a Doctor --</option>
                         {doctors.map(d => (
                           <option key={d._id} value={d._id} className="font-medium text-slate-700">
-                            Dr. {d.name} {d.specialization ? `— ${d.specialization}` : ''}
+                            {d.name.startsWith('Dr.') || d.name.startsWith('Dr ') ? d.name : `Dr. ${d.name}`} {d.specialization ? `— ${d.specialization}` : ''}
                           </option>
                         ))}
                       </select>
