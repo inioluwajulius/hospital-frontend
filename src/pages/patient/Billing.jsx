@@ -97,7 +97,7 @@ const PatientBilling = ({ showNotification } = {}) => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-6">
+              <div className="flex flex-row items-center justify-between sm:justify-end gap-6 w-full md:w-auto mt-4 md:mt-0">
                 <div className="text-right">
                   <p className="text-2xl font-extrabold text-slate-900">${parseFloat(invoice.amount).toFixed(2)}</p>
                   <span className={cn(

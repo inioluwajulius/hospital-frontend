@@ -114,7 +114,7 @@ export const Header = ({ user, onMenuClick }) => {
         {onMenuClick && (
           <button 
             onClick={onMenuClick}
-            className="lg:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors"
+            className="md:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors"
           >
             <Menu size={24} />
           </button>
