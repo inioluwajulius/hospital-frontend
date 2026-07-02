@@ -88,14 +88,14 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
       {isOpen && (
         <div
-          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm md:hidden z-30"
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm lg:hidden z-30"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       <aside
-        className={`fixed md:relative w-72 h-full bg-white text-slate-700 z-40 transform transition-transform duration-300 ease-in-out border-r border-slate-200 shadow-xl flex flex-col ${
-          !isOpen ? "-translate-x-full md:translate-x-0" : ""
+        className={`fixed lg:relative w-72 h-full bg-white text-slate-700 z-40 transform transition-transform duration-300 ease-in-out border-r border-slate-200 shadow-xl flex flex-col ${
+          !isOpen ? "-translate-x-full lg:translate-x-0" : ""
         }`}
       >
         <div className="p-6 pb-4 border-b border-slate-100">

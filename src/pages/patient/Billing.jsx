@@ -60,7 +60,7 @@ const PatientBilling = ({ showNotification } = {}) => {
               <Clock size={18} />
             </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900">${pendingAmount.toFixed(2)}</p>
+          <p className="text-3xl font-extrabold text-slate-900">₦{pendingAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
@@ -70,7 +70,7 @@ const PatientBilling = ({ showNotification } = {}) => {
               <CheckCircle2 size={18} />
             </div>
           </div>
-          <p className="text-3xl font-extrabold text-slate-900">${totalPaid.toFixed(2)}</p>
+          <p className="text-3xl font-extrabold text-slate-900">₦{totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
         </div>
 
         <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
@@ -99,7 +99,7 @@ const PatientBilling = ({ showNotification } = {}) => {
 
               <div className="flex flex-row items-center justify-between sm:justify-end gap-6 w-full md:w-auto mt-4 md:mt-0">
                 <div className="text-right">
-                  <p className="text-2xl font-extrabold text-slate-900">${parseFloat(invoice.amount).toFixed(2)}</p>
+                  <p className="text-2xl font-extrabold text-slate-900">₦{(parseFloat(invoice.amount) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   <span className={cn(
                     "px-3 py-1 rounded-full text-[10px] font-bold uppercase",
                     (invoice.status === 'Paid' || invoice.status === 'paid') ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"

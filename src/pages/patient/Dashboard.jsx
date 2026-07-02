@@ -86,7 +86,7 @@ const PatientDashboard = () => {
     { title: 'Upcoming Visits', value: stats.appointments, icon: Calendar, color: 'blue' },
     { title: 'Active Prescriptions', value: stats.prescriptions, icon: Pill, color: 'emerald' },
     { title: 'Recent Results', value: stats.testResults, icon: Activity, color: 'amber' },
-    { title: 'Unpaid Bills', value: `$${stats.unpaidBills}`, icon: FileText, color: 'red' }
+    { title: 'Unpaid Bills', value: `₦${stats.unpaidBills.toLocaleString()}`, icon: FileText, color: 'red' }
   ];
 
   const colorClasses = {
