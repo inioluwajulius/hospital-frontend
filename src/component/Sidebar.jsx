@@ -108,8 +108,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm text-slate-900 truncate">{user?.name || 'User'}</p>
-              <p className="text-xs text-slate-500 truncate mt-0.5">{user?.email || 'email@hospital.com'}</p>
+              <p className="font-bold text-sm text-slate-900 truncate" title={user?.name}>{user?.name || 'User'}</p>
+              <p className="text-[11px] text-slate-500 truncate mt-0.5" title={user?.email}>{user?.email || 'email@hospital.com'}</p>
               <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full mt-2 inline-block uppercase tracking-wider">
                 {user?.role?.replace('_', ' ') || 'USER'}
               </span>
