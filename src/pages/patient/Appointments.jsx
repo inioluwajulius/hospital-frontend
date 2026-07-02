@@ -64,11 +64,18 @@ const AppointmentCard = ({ appointment, onCancel, isCancelling }) => {
     >
       <div className="flex justify-between items-start mb-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600">
+          <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", appointment.isUrgent ? "bg-red-50 text-red-600" : "bg-indigo-50 text-indigo-600")}>
             <User size={24} />
           </div>
           <div>
-            <h4 className="font-bold text-lg text-slate-900 group-hover:text-primary transition-colors">Dr. {doctorName}</h4>
+            <div className="flex items-center gap-2">
+              <h4 className="font-bold text-lg text-slate-900 group-hover:text-primary transition-colors">Dr. {doctorName}</h4>
+              {appointment.isUrgent && (
+                <span className="bg-red-100 text-red-700 border border-red-200 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                  <AlertCircle size={10} /> URGENT
+                </span>
+              )}
+            </div>
             <p className="text-sm font-medium text-slate-500">{department}</p>
           </div>
         </div>
