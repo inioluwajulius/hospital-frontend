@@ -271,7 +271,7 @@ const PatientAppointments = () => {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
           <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center"><CalendarIcon size={24} /></div>
           <div>
@@ -305,7 +305,7 @@ const PatientAppointments = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1.5 bg-slate-100 rounded-2xl w-fit">
+      <div className="flex overflow-x-auto hide-scrollbar gap-2 p-1.5 bg-slate-100 rounded-2xl w-full md:w-fit">
         <button 
           onClick={() => setActiveTab('upcoming')}
           className={cn("px-6 py-2.5 rounded-xl font-bold text-sm transition-all relative", activeTab === 'upcoming' ? "text-slate-900" : "text-slate-500 hover:text-slate-700")}
@@ -357,8 +357,8 @@ const PatientAppointments = () => {
                 </button>
               </div>
             </div>
-            
-            <div className="grid grid-cols-7 gap-px bg-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
+            <div className="overflow-x-auto -mx-6 px-6 md:mx-0 md:px-0">
+              <div className="min-w-[600px] md:min-w-0 grid grid-cols-7 gap-px bg-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
               {weekDays.map(day => (
                 <div key={day} className="bg-slate-50 py-3 text-center text-xs font-extrabold text-slate-500 uppercase tracking-wider">
                   {day}
@@ -399,6 +399,7 @@ const PatientAppointments = () => {
                   </div>
                 );
               })}
+              </div>
             </div>
           </div>
         ) : displayedAppointments.length > 0 ? (
@@ -493,7 +494,7 @@ const PatientAppointments = () => {
                   </div>
                   
                   {/* Date and Time Row */}
-                  <div className="grid grid-cols-2 gap-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div className="space-y-2">
                       <label className="block text-sm font-bold text-slate-700 ml-1">Date</label>
                       <div className="relative">
