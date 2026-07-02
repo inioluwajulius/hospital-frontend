@@ -104,7 +104,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
         <div className="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center text-lg font-bold shadow-sm">
+            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 border border-emerald-200 rounded-2xl flex items-center justify-center text-lg font-bold shadow-sm shrink-0">
               {user?.name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="flex-1 min-w-0">

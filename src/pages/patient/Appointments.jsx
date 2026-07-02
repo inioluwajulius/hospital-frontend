@@ -42,7 +42,7 @@ const StatusBadge = ({ status }) => {
   };
 
   return (
-    <span className={cn("px-3 py-1 text-xs font-bold rounded-full border flex items-center gap-1.5 w-fit uppercase tracking-wider", styles[status] || styles.pending)}>
+    <span className={cn("px-3 py-1 text-xs font-bold rounded-full border flex items-center gap-1.5 w-fit uppercase tracking-wider shrink-0", styles[status] || styles.pending)}>
       {icons[status] || icons.pending} {status}
     </span>
   );
@@ -62,14 +62,14 @@ const AppointmentCard = ({ appointment, onCancel, isCancelling }) => {
       exit={{ opacity: 0, scale: 0.95 }}
       className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-lg transition-all group flex flex-col h-full"
     >
-      <div className="flex justify-between items-start mb-6">
-        <div className="flex items-center gap-4">
-          <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", appointment.isUrgent ? "bg-red-50 text-red-600" : "bg-indigo-50 text-indigo-600")}>
+      <div className="flex justify-between items-start mb-6 gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center shrink-0", appointment.isUrgent ? "bg-red-50 text-red-600" : "bg-indigo-50 text-indigo-600")}>
             <User size={24} />
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h4 className="font-bold text-lg text-slate-900 group-hover:text-primary transition-colors line-clamp-2">
+              <h4 className="font-bold text-lg text-slate-900 group-hover:text-primary transition-colors truncate">
                 {doctorName.startsWith('Dr.') || doctorName.startsWith('Dr ') ? doctorName : `Dr. ${doctorName}`}
               </h4>
               {appointment.isUrgent && (
@@ -405,7 +405,7 @@ const PatientAppointments = () => {
         ) : displayedAppointments.length > 0 ? (
           <motion.div 
             layout
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
           >
             <AnimatePresence mode="popLayout">
               {displayedAppointments.map(apt => (
