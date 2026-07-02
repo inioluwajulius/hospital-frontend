@@ -134,9 +134,9 @@ const PatientDashboard = () => {
             transition={{ delay: idx * 0.1 }}
             className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all group"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{stat.title}</h3>
-              <div className={`p-2 rounded-lg transition-transform group-hover:scale-110 ${colorClasses[stat.color]}`}>
+            <div className="flex items-start justify-between mb-4 gap-3">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider leading-snug">{stat.title}</h3>
+              <div className={`p-2 rounded-lg transition-transform group-hover:scale-110 shrink-0 ${colorClasses[stat.color]}`}>
                 <stat.icon size={20} />
               </div>
             </div>
