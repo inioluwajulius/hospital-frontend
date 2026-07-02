@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useCurrency } from '../../contexts/CurrencyContext';
 import { api } from '../../services/api';
 import { Skeleton } from '../../component/SkeletonLoader';
 import { EmptyState } from '../../component/EmptyState';
@@ -19,6 +20,7 @@ const PatientDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { formatAmount } = useCurrency();
   const [stats, setStats] = useState({
     appointments: 0,
     prescriptions: 0,
@@ -86,7 +88,7 @@ const PatientDashboard = () => {
     { title: 'Upcoming Visits', value: stats.appointments, icon: Calendar, color: 'blue' },
     { title: 'Active Prescriptions', value: stats.prescriptions, icon: Pill, color: 'emerald' },
     { title: 'Recent Results', value: stats.testResults, icon: Activity, color: 'amber' },
-    { title: 'Unpaid Bills', value: `₦${stats.unpaidBills.toLocaleString()}`, icon: FileText, color: 'red' }
+    { title: 'Unpaid Bills', value: formatAmount(stats.unpaidBills), icon: FileText, color: 'red' }
   ];
 
   const colorClasses = {

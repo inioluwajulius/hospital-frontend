@@ -11,6 +11,7 @@ import {
   Activity,
   Palette
 } from 'lucide-react';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const SettingItem = ({ icon: Icon, title, description, badge, onClick }) => (
   <button onClick={onClick} className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-200">
@@ -40,6 +41,8 @@ export const Settings = () => {
       return null;
     }
   });
+
+  const { currency, setCurrency } = useCurrency();
 
   const handleComingSoon = (featureName) => {
     alert(`${featureName} feature is coming soon!`);
@@ -120,13 +123,25 @@ export const Settings = () => {
               <h3 className="font-bold text-slate-900 text-sm uppercase tracking-wider">Hospital Configuration</h3>
             </div>
             <div className="p-2">
-              <SettingItem 
-                icon={Globe} 
-                title="Regional Settings" 
-                description="Set timezone, language, and currency" 
-                badge="Coming Soon"
-                onClick={() => handleComingSoon('Regional Settings')}
-              />
+              <div className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 transition-all group border border-transparent hover:border-slate-200">
+                <div className="p-3 bg-slate-100 text-slate-500 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                  <Globe size={20} />
+                </div>
+                <div className="flex-1 text-left">
+                  <h4 className="font-bold text-slate-900 text-sm">Currency Preference</h4>
+                  <p className="text-xs text-slate-500">Select your preferred currency</p>
+                </div>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="bg-white border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 block p-2 font-medium shadow-sm outline-none transition-all cursor-pointer hover:border-emerald-300"
+                >
+                  <option value="NGN">Naira (₦)</option>
+                  <option value="USD">USD ($)</option>
+                  <option value="EUR">Euro (€)</option>
+                  <option value="GBP">Pound (£)</option>
+                </select>
+              </div>
               <SettingItem 
                 icon={Palette} 
                 title="Branding & White-Label" 
