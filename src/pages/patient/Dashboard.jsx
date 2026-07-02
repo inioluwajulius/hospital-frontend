@@ -174,7 +174,7 @@ const PatientDashboard = () => {
               </div>
             ) : nextAppointment ? (
               <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 flex flex-col sm:flex-row items-start gap-5 hover:bg-slate-100 transition-colors cursor-pointer group" onClick={() => navigate('/patient/appointments')}>
-                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center w-full sm:w-auto sm:min-w-[70px] group-hover:border-primary/20 group-hover:shadow-primary/5 transition-all">
+                <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center w-full sm:w-auto sm:min-w-[70px] group-hover:border-primary/20 group-hover:shadow-primary/5 transition-all shrink-0">
                   <span className="text-xs font-bold text-slate-400 uppercase">
                     {new Date(nextAppointment.appointmentDate).toLocaleString('default', { month: 'short' })}
                   </span>
@@ -234,7 +234,7 @@ const PatientDashboard = () => {
                   presc.medications?.map((med, idx) => (
                     <div key={`${presc._id}-${idx}`} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-slate-100 transition-colors">
                       <div className="flex items-center gap-4">
-                        <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
+                        <div className="p-3 bg-blue-100 text-blue-600 rounded-xl shrink-0">
                           <Pill size={20} />
                         </div>
                         <div>
