@@ -125,8 +125,4 @@
   .hover\:shadow-primary\/40:hover {
     box-shadow: 0 10px 15px -3px rgb(var(--color-primary) / 0.4);
   }
-
-  .bg-primary\/40 {
-    background-color: rgb(var(--color-primary) / 0.4);
-  }
 }

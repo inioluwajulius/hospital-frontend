@@ -234,7 +234,7 @@ const Login = () => {
               'w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2',
               isFormValid 
                 ? 'bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-lg hover:shadow-primary/40' 
-                : 'bg-primary/40 text-white cursor-not-allowed'
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
             )}
           >
             {isLoading ? (
