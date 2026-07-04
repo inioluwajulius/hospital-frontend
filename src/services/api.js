@@ -85,6 +85,7 @@ export const createRecord = (data) => API.post("/medical-records", data);
 
 // UPDATE methods - V1 Endpoints
 export const updatePatient = (id, data) => API.put(`/patients/${id}`, data);
+export const updatePatientProfile = (data) => API.put(`/patients/profile`, data);
 export const updateDoctor = (id, data) => API.put(`/doctors/${id}`, data);
 export const markNotificationAsRead = (id) => API.patch(`/notifications/${id}/read`);
 export const markAllNotificationsAsRead = () => API.patch("/notifications/read-all");
@@ -165,6 +166,7 @@ export const api = {
     resetPassword,
     // UPDATE methods
     updatePatient,
+    updatePatientProfile,
     updateAppointment,
     updateMedicalRecord,
     updateLabTest,

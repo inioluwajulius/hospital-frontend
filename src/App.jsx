@@ -41,7 +41,9 @@ import PatientPrescriptions from "./pages/patient/Prescriptions";
 import PatientMedicalRecords from "./pages/patient/MedicalRecords";
 import PatientBilling from "./pages/patient/Billing";
 import PatientPharmacy from "./pages/patient/Pharmacy";
-
+import PatientLabResults from "./pages/patient/LabResults";
+import PatientRadiologyReports from "./pages/patient/RadiologyReports";
+import PatientSettings from "./pages/patient/Settings";
 // Shared
 import DashboardLayout from "./layouts/DashboardLayout";
 import { AuditLogs } from "./component/AuditLogs";
@@ -108,9 +110,11 @@ function App() {
             <Route path="/patient/appointments" element={<ProtectedRoute requiredRole="patient"><PatientAppointments /></ProtectedRoute>} />
             <Route path="/patient/prescriptions" element={<ProtectedRoute requiredRole="patient"><PatientPrescriptions /></ProtectedRoute>} />
             <Route path="/patient/medical-records" element={<ProtectedRoute requiredRole="patient"><PatientMedicalRecords /></ProtectedRoute>} />
+            <Route path="/patient/lab-results" element={<ProtectedRoute requiredRole="patient"><PatientLabResults /></ProtectedRoute>} />
+            <Route path="/patient/radiology" element={<ProtectedRoute requiredRole="patient"><PatientRadiologyReports /></ProtectedRoute>} />
             <Route path="/patient/billing" element={<ProtectedRoute requiredRole="patient"><PatientBilling /></ProtectedRoute>} />
             <Route path="/patient/pharmacy" element={<ProtectedRoute requiredRole="patient"><PatientPharmacy /></ProtectedRoute>} />
-            <Route path="/patient/settings" element={<ProtectedRoute requiredRole="patient"><Settings /></ProtectedRoute>} />
+            <Route path="/patient/settings" element={<ProtectedRoute requiredRole="patient"><PatientSettings /></ProtectedRoute>} />
           </Route>
 
           {/* 404 Page */}

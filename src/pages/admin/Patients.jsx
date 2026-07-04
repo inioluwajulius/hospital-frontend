@@ -19,7 +19,10 @@ import {
   Download,
   X,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  ShieldCheck,
+  Syringe,
+  Save
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
@@ -43,6 +46,14 @@ const Patients = () => {
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
   
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedPatientDetails, setSelectedPatientDetails] = useState(null);
+  
+  const [isEditingInsurance, setIsEditingInsurance] = useState(false);
+  const [insuranceData, setInsuranceData] = useState({ provider: '', policyNumber: '', status: 'Active' });
+  const [isUpdatingRecord, setIsUpdatingRecord] = useState(false);
+  
+  const [isAddingImm, setIsAddingImm] = useState(false);
+  const [newImmunization, setNewImmunization] = useState({ name: '', date: '', status: 'scheduled' });
   
   const [formData, setFormData] = useState({
     name: '',
@@ -174,6 +185,69 @@ const Patients = () => {
 
     fetchPatients();
   }, []);
+
+  useEffect(() => {
+    if (selectedPatient) {
+      api.getPatient(selectedPatient.id)
+        .then(res => {
+          const data = res?.data?.data || res?.data;
+          setSelectedPatientDetails(data);
+          if (data?.insurance) {
+            setInsuranceData(data.insurance);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch patient details', err);
+          setSelectedPatientDetails(selectedPatient); // fallback
+        });
+    } else {
+      setSelectedPatientDetails(null);
+      setIsEditingInsurance(false);
+      setIsAddingImm(false);
+    }
+  }, [selectedPatient]);
+
+  const handleUpdateInsurance = async (e) => {
+    e.preventDefault();
+    if (!selectedPatient) return;
+    
+    setIsUpdatingRecord(true);
+    try {
+      await api.updatePatient(selectedPatient.id, { insurance: insuranceData });
+      const res = await api.getPatient(selectedPatient.id);
+      setSelectedPatientDetails(res?.data?.data || res?.data);
+      setIsEditingInsurance(false);
+      toast.success('Insurance updated successfully!');
+    } catch (error) {
+      console.error('Failed to update insurance', error);
+      toast.error('Failed to update insurance');
+    } finally {
+      setIsUpdatingRecord(false);
+    }
+  };
+
+  const handleAddImmunization = async (e) => {
+    e.preventDefault();
+    if (!newImmunization.name || !newImmunization.date || !selectedPatient) return;
+    
+    setIsUpdatingRecord(true);
+    try {
+      const updatedImms = [...(selectedPatientDetails?.immunizations || []), newImmunization];
+      await api.updatePatient(selectedPatient.id, { immunizations: updatedImms });
+      
+      const res = await api.getPatient(selectedPatient.id);
+      setSelectedPatientDetails(res?.data?.data || res?.data);
+      
+      setNewImmunization({ name: '', date: '', status: 'scheduled' });
+      setIsAddingImm(false);
+      toast.success('Immunization added successfully!');
+    } catch (error) {
+      console.error('Failed to add immunization', error);
+      toast.error('Failed to add immunization');
+    } finally {
+      setIsUpdatingRecord(false);
+    }
+  };
 
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = 
@@ -732,6 +806,132 @@ const Patients = () => {
                           <p className="text-[10px] text-slate-400 uppercase font-bold">Address</p>
                           <p className="text-sm font-bold text-slate-700">{selectedPatient.address}</p>
                         </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Primary Insurance</h4>
+                    <button 
+                      onClick={() => setIsEditingInsurance(!isEditingInsurance)}
+                      className="text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+                    >
+                      {isEditingInsurance ? 'Cancel' : 'Edit'}
+                    </button>
+                  </div>
+                  
+                  {isEditingInsurance ? (
+                    <form onSubmit={handleUpdateInsurance} className="bg-indigo-50/50 p-4 rounded-2xl space-y-3 border border-indigo-100">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-indigo-900/60 uppercase">Provider</label>
+                        <input type="text" value={insuranceData.provider} onChange={e => setInsuranceData({...insuranceData, provider: e.target.value})} className="w-full bg-white border border-indigo-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none text-indigo-900" placeholder="Insurance Provider" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-indigo-900/60 uppercase">Policy Number</label>
+                        <input type="text" value={insuranceData.policyNumber} onChange={e => setInsuranceData({...insuranceData, policyNumber: e.target.value})} className="w-full bg-white border border-indigo-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none text-indigo-900" placeholder="Policy Number" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-indigo-900/60 uppercase">Status</label>
+                        <select value={insuranceData.status} onChange={e => setInsuranceData({...insuranceData, status: e.target.value})} className="w-full bg-white border border-indigo-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none text-indigo-900">
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      </div>
+                      <button type="submit" disabled={isUpdatingRecord} className="w-full py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-all disabled:opacity-70 mt-2">
+                        {isUpdatingRecord ? 'Saving...' : 'Save Insurance'}
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100">
+                      {selectedPatientDetails?.insurance ? (
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 bg-indigo-100 text-indigo-600 rounded-lg shrink-0">
+                            <ShieldCheck size={18} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h5 className="text-[10px] font-bold text-indigo-900/60 uppercase tracking-wider mb-0.5">Provider</h5>
+                                <p className="text-sm font-black text-indigo-900">{selectedPatientDetails.insurance.provider || 'N/A'}</p>
+                              </div>
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${selectedPatientDetails.insurance.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                {selectedPatientDetails.insurance.status || 'Active'}
+                              </span>
+                            </div>
+                            <div className="mt-2 pt-2 border-t border-indigo-200/50">
+                              <h5 className="text-[10px] font-bold text-indigo-900/60 uppercase tracking-wider mb-0.5">Policy Number</h5>
+                              <p className="text-xs font-bold text-indigo-900">{selectedPatientDetails.insurance.policyNumber || 'N/A'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-4">
+                          <ShieldCheck className="w-8 h-8 text-indigo-200 mx-auto mb-2" />
+                          <p className="text-xs text-indigo-900/60 font-medium">No insurance on file</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Immunizations</h4>
+                    <button 
+                      onClick={() => setIsAddingImm(!isAddingImm)}
+                      className="text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+                    >
+                      {isAddingImm ? 'Cancel' : 'Add New'}
+                    </button>
+                  </div>
+                  
+                  {isAddingImm && (
+                    <form onSubmit={handleAddImmunization} className="bg-teal-50/50 p-4 rounded-2xl space-y-3 border border-teal-100 mb-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-teal-900/60 uppercase">Vaccine Name</label>
+                        <input type="text" value={newImmunization.name} onChange={e => setNewImmunization({...newImmunization, name: e.target.value})} required className="w-full bg-white border border-teal-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none text-teal-900" placeholder="e.g., COVID-19 Booster" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-teal-900/60 uppercase">Date</label>
+                        <input type="date" value={newImmunization.date} onChange={e => setNewImmunization({...newImmunization, date: e.target.value})} required className="w-full bg-white border border-teal-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none text-teal-900" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-teal-900/60 uppercase">Status</label>
+                        <select value={newImmunization.status} onChange={e => setNewImmunization({...newImmunization, status: e.target.value})} className="w-full bg-white border border-teal-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none text-teal-900">
+                          <option value="completed">Completed</option>
+                          <option value="scheduled">Scheduled</option>
+                        </select>
+                      </div>
+                      <button type="submit" disabled={isUpdatingRecord} className="w-full py-2 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 transition-all disabled:opacity-70 mt-2">
+                        {isUpdatingRecord ? 'Adding...' : 'Add Immunization'}
+                      </button>
+                    </form>
+                  )}
+                  
+                  <div className="space-y-2">
+                    {selectedPatientDetails?.immunizations && selectedPatientDetails.immunizations.length > 0 ? (
+                      selectedPatientDetails.immunizations.map((imm, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-1.5 h-1.5 rounded-full ${imm.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+                            <div>
+                              <h5 className="font-bold text-sm text-slate-900">{imm.name}</h5>
+                              <p className="text-[10px] text-slate-500 font-medium">{new Date(imm.date).toLocaleDateString()}</p>
+                            </div>
+                          </div>
+                          <div className={`px-2 py-0.5 rounded text-[10px] font-bold capitalize ${
+                            imm.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {imm.status}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="bg-slate-50 rounded-xl p-4 text-center border border-slate-100">
+                        <Syringe className="w-6 h-6 text-slate-300 mx-auto mb-2" />
+                        <p className="text-xs text-slate-500 font-medium">No immunizations recorded</p>
                       </div>
                     )}
                   </div>

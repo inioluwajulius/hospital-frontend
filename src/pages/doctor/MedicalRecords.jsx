@@ -19,6 +19,7 @@ import {
 import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ShieldCheck, Syringe } from 'lucide-react';
 
 const MedicalRecords = ({ showNotification } = {}) => {
   const [records, setRecords] = useState([]);
@@ -26,10 +27,13 @@ const MedicalRecords = ({ showNotification } = {}) => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [selectedPatientData, setSelectedPatientData] = useState(null);
   const [activeTab, setActiveTab] = useState('timeline');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [newImmunization, setNewImmunization] = useState({ name: '', date: '', status: 'scheduled' });
+  const [isAddingImm, setIsAddingImm] = useState(false);
   const [formData, setFormData] = useState({
     patientId: '',
     patientName: '',
@@ -39,7 +43,14 @@ const MedicalRecords = ({ showNotification } = {}) => {
     findings: '',
     clinicalNotes: '',
     doctorName: 'Dr. Michael Chen',
-    signature: true
+    signature: true,
+    vitals: {
+      bloodPressure: '',
+      heartRate: '',
+      weight: '',
+      height: '',
+      temperature: ''
+    }
   });
 
   useEffect(() => {
@@ -61,6 +72,16 @@ const MedicalRecords = ({ showNotification } = {}) => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    if (selectedPatient && api.getPatient) {
+      api.getPatient(selectedPatient)
+        .then(res => setSelectedPatientData(res?.data?.data || res?.data))
+        .catch(console.error);
+    } else {
+      setSelectedPatientData(null);
+    }
+  }, [selectedPatient]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === 'patientId') {
@@ -73,6 +94,14 @@ const MedicalRecords = ({ showNotification } = {}) => {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleVitalChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      vitals: { ...prev.vitals, [name]: value }
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -106,7 +135,8 @@ const MedicalRecords = ({ showNotification } = {}) => {
           findings: '',
           clinicalNotes: '',
           doctorName: 'Dr. Michael Chen',
-          signature: true
+          signature: true,
+          vitals: { bloodPressure: '', heartRate: '', weight: '', height: '', temperature: '' }
         });
       }, 2000);
     } catch (error) {
@@ -122,6 +152,28 @@ const MedicalRecords = ({ showNotification } = {}) => {
       setTimeout(() => {
         showNotification('PDF exported successfully!', 'success');
       }, 1500);
+    }
+  };
+
+  const handleAddImmunization = async (e) => {
+    e.preventDefault();
+    if (!newImmunization.name || !newImmunization.date || !selectedPatient) return;
+    
+    setIsAddingImm(true);
+    try {
+      const updatedImms = [...(selectedPatientData?.immunizations || []), newImmunization];
+      await api.updatePatient(selectedPatient, { immunizations: updatedImms });
+      
+      const res = await api.getPatient(selectedPatient);
+      setSelectedPatientData(res?.data?.data || res?.data);
+      
+      setNewImmunization({ name: '', date: '', status: 'scheduled' });
+      if (showNotification) showNotification('Immunization added successfully!', 'success');
+    } catch (error) {
+      console.error('Failed to add immunization', error);
+      if (showNotification) showNotification('Failed to add immunization', 'error');
+    } finally {
+      setIsAddingImm(false);
     }
   };
 
@@ -237,6 +289,49 @@ const MedicalRecords = ({ showNotification } = {}) => {
                             <option key={p.id} value={p.id}>{p.name}</option>
                           ))}
                         </select>
+                      </div>
+
+                      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-4">
+                        <h4 className="text-xs font-bold text-slate-700 uppercase tracking-widest flex items-center gap-2">
+                          <AlertCircle size={14} className="text-rose-500" /> Vitals
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">BP (mmHg)</label>
+                            <input 
+                              type="text" name="bloodPressure" value={formData.vitals.bloodPressure} onChange={handleVitalChange} placeholder="120/80"
+                              className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">HR (bpm)</label>
+                            <input 
+                              type="number" name="heartRate" value={formData.vitals.heartRate} onChange={handleVitalChange} placeholder="75"
+                              className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Weight (kg)</label>
+                            <input 
+                              type="number" name="weight" value={formData.vitals.weight} onChange={handleVitalChange} placeholder="70"
+                              className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Height (cm)</label>
+                            <input 
+                              type="number" name="height" value={formData.vitals.height} onChange={handleVitalChange} placeholder="175"
+                              className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Temp (°C)</label>
+                            <input 
+                              type="number" name="temperature" value={formData.vitals.temperature} onChange={handleVitalChange} placeholder="36.5" step="0.1"
+                              className="w-full bg-white border border-slate-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none"
+                            />
+                          </div>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -396,6 +491,28 @@ const MedicalRecords = ({ showNotification } = {}) => {
             >
               All Records
             </button>
+            {selectedPatient && (
+              <>
+                <button 
+                  onClick={() => setActiveTab('immunizations')}
+                  className={cn(
+                    "px-6 py-2 rounded-xl text-sm font-bold transition-all",
+                    activeTab === 'immunizations' ? "bg-white text-primary shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  )}
+                >
+                  Immunizations
+                </button>
+                <button 
+                  onClick={() => setActiveTab('insurance')}
+                  className={cn(
+                    "px-6 py-2 rounded-xl text-sm font-bold transition-all",
+                    activeTab === 'insurance' ? "bg-white text-primary shadow-sm" : "text-slate-500 hover:text-slate-900"
+                  )}
+                >
+                  Insurance
+                </button>
+              </>
+            )}
           </div>
 
           {activeTab === 'timeline' && selectedPatient ? (
@@ -505,6 +622,105 @@ const MedicalRecords = ({ showNotification } = {}) => {
                   </div>
                 ))}
               </div>
+            </div>
+          ) : activeTab === 'immunizations' && selectedPatientData ? (
+            <div className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <Syringe className="text-teal-500" size={20} />
+                  Immunizations & Preventative Care
+                </h3>
+              </div>
+              
+              <div className="space-y-3">
+                {selectedPatientData.immunizations && selectedPatientData.immunizations.length > 0 ? (
+                  selectedPatientData.immunizations.map((imm, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${imm.status === 'completed' ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
+                        <div>
+                          <h4 className="font-bold text-slate-900">{imm.name}</h4>
+                          <p className="text-xs text-slate-500 font-medium">{imm.status === 'completed' ? 'Given on' : 'Due by'} {new Date(imm.date).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div className={`px-3 py-1 rounded-lg text-xs font-bold capitalize ${
+                        imm.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        {imm.status}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="bg-slate-50 rounded-2xl p-8 text-center border border-slate-100">
+                    <Syringe className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-600 font-medium">No immunization records found.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-6 pt-6 border-t border-slate-100">
+                <h4 className="font-bold text-sm text-slate-900 mb-4">Add Immunization</h4>
+                <form onSubmit={handleAddImmunization} className="flex flex-col md:flex-row gap-3 items-end">
+                  <div className="flex-1 w-full">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Vaccine Name</label>
+                    <input type="text" value={newImmunization.name} onChange={e => setNewImmunization({...newImmunization, name: e.target.value})} required className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none" placeholder="e.g., COVID-19 Booster" />
+                  </div>
+                  <div className="flex-1 w-full">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Date</label>
+                    <input type="date" value={newImmunization.date} onChange={e => setNewImmunization({...newImmunization, date: e.target.value})} required className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none" />
+                  </div>
+                  <div className="flex-1 w-full">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">Status</label>
+                    <select value={newImmunization.status} onChange={e => setNewImmunization({...newImmunization, status: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 text-sm focus:ring-primary/20 outline-none">
+                      <option value="completed">Completed</option>
+                      <option value="scheduled">Scheduled</option>
+                    </select>
+                  </div>
+                  <button type="submit" disabled={isAddingImm} className="w-full md:w-auto px-4 py-2 bg-primary text-white font-bold rounded-lg hover:bg-primary/90 transition-all disabled:opacity-70 flex items-center justify-center gap-2">
+                    {isAddingImm ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+                    Add
+                  </button>
+                </form>
+              </div>
+            </div>
+          ) : activeTab === 'insurance' && selectedPatientData ? (
+            <div className="bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <ShieldCheck className="text-indigo-500" size={20} />
+                  Primary Insurance Details
+                </h3>
+              </div>
+              
+              {selectedPatientData.insurance ? (
+                <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100 mb-5">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-indigo-100 text-indigo-600 rounded-xl shrink-0">
+                      <ShieldCheck size={24} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h4 className="text-xs font-bold text-indigo-900/60 uppercase tracking-wider mb-1">Provider</h4>
+                          <p className="text-lg font-black text-indigo-900">{selectedPatientData.insurance.provider || 'N/A'}</p>
+                        </div>
+                        <span className={`px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-wider ${selectedPatientData.insurance.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                          {selectedPatientData.insurance.status || 'Active'}
+                        </span>
+                      </div>
+                      <div className="mt-4 pt-4 border-t border-indigo-200/50">
+                        <h4 className="text-xs font-bold text-indigo-900/60 uppercase tracking-wider mb-1">Policy Number</h4>
+                        <p className="font-bold text-indigo-900">{selectedPatientData.insurance.policyNumber || 'N/A'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-50 rounded-2xl p-8 text-center border border-slate-100">
+                  <ShieldCheck className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                  <p className="text-slate-600 font-medium">No insurance information on file.</p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="bg-slate-50 rounded-2xl p-12 text-center">

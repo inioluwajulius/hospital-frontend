@@ -69,6 +69,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       { label: "Appointments", path: "/patient/appointments", icon: <Calendar size={20} /> },
       { label: "Prescriptions", path: "/patient/prescriptions", icon: <Pill size={20} /> },
       { label: "Medical Records", path: "/patient/medical-records", icon: <FolderHeart size={20} /> },
+      { label: "Lab Results", path: "/patient/lab-results", icon: <Microscope size={20} /> },
+      { label: "Radiology", path: "/patient/radiology", icon: <Activity size={20} /> },
       { label: "Billing", path: "/patient/billing", icon: <CreditCard size={20} /> },
       { label: "Pharmacy", path: "/patient/pharmacy", icon: <ShoppingCart size={20} /> },
       { label: "Settings", path: "/patient/settings", icon: <Settings size={20} /> },
