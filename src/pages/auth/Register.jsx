@@ -598,20 +598,28 @@ const Register = () => {
                                 )}
 
                                 {/* Submit Button */}
-                                <Motion.button
+                                <button
                                     type="submit"
-                                    disabled={!canSubmit || isSubmitting}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.45 }}
-                                    whileHover={{ scale: canSubmit ? 1.02 : 1 }}
-                                    whileTap={{ scale: canSubmit ? 0.98 : 1 }}
-                                    className={cn(
-                                        'w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2',
-                                        canSubmit
-                                            ? 'bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-lg hover:shadow-primary/40'
-                                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                    )}
+                                    disabled={isSubmitting}
+                                    style={{
+                                        width: '100%',
+                                        padding: '12px',
+                                        borderRadius: '12px',
+                                        fontWeight: 'bold',
+                                        fontSize: '14px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                        border: 'none',
+                                        cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                                        backgroundColor: '#10b981',
+                                        color: '#ffffff',
+                                        boxShadow: '0 4px 14px rgba(16,185,129,0.4)',
+                                        transition: 'all 0.2s',
+                                    }}
+                                    onMouseEnter={e => { if (!isSubmitting) e.currentTarget.style.backgroundColor = '#059669'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.backgroundColor = '#10b981'; }}
                                 >
                                     {isSubmitting ? (
                                         <>
@@ -624,7 +632,7 @@ const Register = () => {
                                             Create Account
                                         </>
                                     )}
-                                </Motion.button>
+                                </button>
                             </form>
                         ) : null}
                     </>
