@@ -601,9 +601,6 @@ const Register = () => {
                                 <Motion.button
                                     type="submit"
                                     disabled={!canSubmit || isSubmitting}
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    transition={{ delay: 0.45 }}
                                     whileHover={{ scale: canSubmit ? 1.02 : 1 }}
                                     whileTap={{ scale: canSubmit ? 0.98 : 1 }}
                                     className={cn(
