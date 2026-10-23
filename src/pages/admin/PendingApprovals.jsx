@@ -20,7 +20,7 @@ const PendingApprovals = () => {
     try {
       setLoading(true);
       const doctorsResponse = await api.get('/users/registrations/pending');
-      const pendingDoctors = doctorsResponse.data?.filter(user => user.role === 'doctor') || doctorsResponse.data || [];
+      const pendingDoctors = doctorsResponse.data?.filter(user => user.role === 'doctor' || user.role === 'nurse') || [];
       setDoctors(pendingDoctors);
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to fetch pending registrations');

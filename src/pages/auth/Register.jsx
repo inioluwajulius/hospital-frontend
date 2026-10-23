@@ -34,7 +34,10 @@ const Register = () => {
     // Initialize userType based on URL parameter
     const [userType, setUserType] = useState(type === 'patient' ? 'patient' : type === 'doctor' ? 'staff' : null);
     const [patientChoice, setPatientChoice] = useState(type === 'patient' ? 'new' : null);
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchCard, setSearchCard] = useState('');
+    const [searchPhone, setSearchPhone] = useState('');
+    const [searchHospitalId, setSearchHospitalId] = useState('');
+    const [hasSearched, setHasSearched] = useState(false);
     const [searchResults, setSearchResults] = useState([]);
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [isSearching, setIsSearching] = useState(false);
@@ -68,6 +71,9 @@ const Register = () => {
         gender: '',
         bloodGroup: '',
         hospitalId: '',
+        specialization: '',
+        licenseNumber: '',
+        yearsOfExperience: '',
     });
 
     const validation = useValidation();
@@ -86,41 +92,52 @@ const Register = () => {
         const hasPassword = form.formData.password && passwordIsStrong;
 
         if (userType === 'patient') {
+            if (selectedPatient) {
+                return hasValidName && hasValidEmail && hasPassword;
+            }
             return hasValidName && hasValidEmail && hasPassword && form.formData.phone && form.formData.age && form.formData.gender && form.formData.hospitalId;
         } else if (userType === 'staff') {
+            if (form.formData.role === 'DOCTOR') {
+                return hasValidName && hasValidEmail && hasPassword && form.formData.role && form.formData.hospitalId && form.formData.specialization && form.formData.licenseNumber && form.formData.yearsOfExperience;
+            }
             return hasValidName && hasValidEmail && hasPassword && form.formData.role && form.formData.hospitalId;
         }
 
         return false;
-    }, [form.formData, userType, passwordIsStrong]);
+    }, [form.formData, userType, passwordIsStrong, selectedPatient]);
 
-    // Handle patient search
-    const handleSearchPatient = async (query) => {
-        setSearchQuery(query);
+    const canSearch = searchCard.trim() && searchPhone.trim() && searchHospitalId;
 
-        if (!query.trim()) {
-            setSearchResults([]);
-            return;
-        }
+    // Look up an unlinked patient record by exact card number + phone at one hospital
+    const handleSearchPatient = async (e) => {
+        e.preventDefault();
+        if (!canSearch) return;
 
         setIsSearching(true);
         try {
-            const response = await api.get(`/patients/search/existing?query=${encodeURIComponent(query)}`);
-            setSearchResults(response.data || []);
+            const params = new URLSearchParams({
+                cardNumber: searchCard.trim(),
+                phone: searchPhone.trim(),
+                hospitalId: searchHospitalId,
+            });
+            const response = await api.get(`/patients/search/existing?${params}`);
+            setSearchResults(Array.isArray(response.data) ? response.data : []);
             setError('');
         } catch {
             setSearchResults([]);
             setError('Error searching patients. Please try again.');
         } finally {
             setIsSearching(false);
+            setHasSearched(true);
         }
     };
 
     // Handle patient selection
     const handleSelectPatient = (patient) => {
         setSelectedPatient(patient);
-        setSearchQuery('');
+        form.setFieldValue('phone', searchPhone.trim());
         setSearchResults([]);
+        setHasSearched(false);
     };
 
     // Handle form submission
@@ -139,17 +156,25 @@ const Register = () => {
                 password: form.formData.password,
                 userType: userType,
                 role: userType === 'staff' ? form.formData.role : 'PATIENT',
-                hospitalId: form.formData.hospitalId,
+                hospitalId: selectedPatient ? selectedPatient.hospitalId : form.formData.hospitalId,
             };
 
-            if (userType === 'patient') {
-                payload.phone = form.formData.phone;
-                payload.age = parseInt(form.formData.age);
-                payload.gender = form.formData.gender;
-                payload.bloodGroup = form.formData.bloodGroup || null;
+            if (userType === 'staff' && form.formData.role === 'DOCTOR') {
+                payload.specialization = form.formData.specialization;
+                payload.licenseNumber = form.formData.licenseNumber;
+                payload.yearsOfExperience = parseInt(form.formData.yearsOfExperience, 10);
+            }
 
+            if (userType === 'patient') {
                 if (selectedPatient) {
                     payload.existingPatientId = selectedPatient._id;
+                    // Phone proves ownership of the existing record
+                    payload.phone = form.formData.phone;
+                } else {
+                    payload.phone = form.formData.phone;
+                    payload.age = parseInt(form.formData.age, 10);
+                    payload.gender = form.formData.gender;
+                    payload.bloodGroup = form.formData.bloodGroup || null;
                 }
             }
 
@@ -309,22 +334,46 @@ const Register = () => {
                                     ← Back
                                 </Motion.button>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-3">Search Your Record</label>
-                                    <p className="text-xs text-slate-500 mb-3">Search by Patient ID, Phone Number, or Card Number</p>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            placeholder="Enter patient ID or phone..."
-                                            value={searchQuery}
-                                            onChange={(e) => handleSearchPatient(e.target.value)}
-                                            className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm font-medium"
-                                        />
-                                        {isSearching && (
-                                            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 text-primary animate-spin" size={18} />
-                                        )}
+                                <form onSubmit={handleSearchPatient} className="space-y-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-3">Find Your Record</label>
+                                        <p className="text-xs text-slate-500 mb-3">Enter the card number and phone number registered with your hospital</p>
                                     </div>
-                                </div>
+                                    <SelectField
+                                        label="Hospital"
+                                        name="searchHospitalId"
+                                        options={hospitals.map(h => ({ label: h.name, value: h.id }))}
+                                        value={searchHospitalId}
+                                        onChange={(e) => setSearchHospitalId(e.target.value)}
+                                        placeholder={isLoadingHospitals ? 'Loading hospitals...' : 'Choose your hospital'}
+                                        required
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Patient card number (e.g. PAT-123456)"
+                                        value={searchCard}
+                                        onChange={(e) => setSearchCard(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm font-medium"
+                                    />
+                                    <input
+                                        type="tel"
+                                        placeholder="Phone number on your record"
+                                        value={searchPhone}
+                                        onChange={(e) => setSearchPhone(e.target.value)}
+                                        className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl outline-none focus:border-primary focus:bg-white transition-all text-sm font-medium"
+                                    />
+                                    <button
+                                        type="submit"
+                                        disabled={!canSearch || isSearching}
+                                        className={cn(
+                                            'w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all',
+                                            canSearch ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                        )}
+                                    >
+                                        {isSearching && <Loader2 size={16} className="animate-spin" />}
+                                        Find my record
+                                    </button>
+                                </form>
 
                                 {searchResults.length > 0 && (
                                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -339,7 +388,6 @@ const Register = () => {
                                                 <div className="flex justify-between items-start">
                                                     <div>
                                                         <p className="font-bold text-slate-900">ID: {patient.patientCardNumber}</p>
-                                                        <p className="text-xs text-slate-500 mt-1">Phone: {patient.phone || 'N/A'}</p>
                                                     </div>
                                                     <CheckCircle2 className="text-primary mt-1" size={18} />
                                                 </div>
@@ -348,9 +396,9 @@ const Register = () => {
                                     </div>
                                 )}
 
-                                {searchQuery && !isSearching && searchResults.length === 0 && (
+                                {hasSearched && !isSearching && searchResults.length === 0 && (
                                     <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
-                                        No patient records found. Try searching with a different ID or phone number.
+                                        No matching record found. Check the card number and phone number, or contact the hospital. If you already created an account for this record, log in instead.
                                     </div>
                                 )}
                             </Motion.div>
@@ -374,9 +422,6 @@ const Register = () => {
                                 <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-4">
                                     <p className="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-2">Selected Patient Record</p>
                                     <p className="font-bold text-slate-900">ID: {selectedPatient.patientCardNumber}</p>
-                                    {selectedPatient.phone && (
-                                        <p className="text-sm text-slate-600 mt-2">Phone: {selectedPatient.phone}</p>
-                                    )}
                                 </div>
                             </Motion.div>
                         )}
@@ -409,29 +454,31 @@ const Register = () => {
                                 </AnimatePresence>
 
                                 {/* Hospital Selection Field */}
-                                <Motion.div
-                                    initial={{ opacity: 0, x: -20 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: 0.05 }}
-                                >
-                                    {isLoadingHospitals ? (
-                                        <div className="flex items-center justify-center p-3 bg-slate-50 rounded-xl border border-slate-200">
-                                            <Loader2 size={16} className="animate-spin text-primary mr-2" />
-                                            <span className="text-sm text-slate-500">Loading hospitals...</span>
-                                        </div>
-                                    ) : (
-                                        <SelectField
-                                            label="Select Hospital"
-                                            name="hospitalId"
-                                            options={hospitals.map(h => ({ label: h.name, value: h.id }))}
-                                            value={form.formData.hospitalId}
-                                            onChange={form.handleChange}
-                                            onBlur={() => form.handleBlur('hospitalId')}
-                                            placeholder="Choose a hospital to join"
-                                            required
-                                        />
-                                    )}
-                                </Motion.div>
+                                {!selectedPatient && (
+                                    <Motion.div
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.05 }}
+                                    >
+                                        {isLoadingHospitals ? (
+                                            <div className="flex items-center justify-center p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                                <Loader2 size={16} className="animate-spin text-primary mr-2" />
+                                                <span className="text-sm text-slate-500">Loading hospitals...</span>
+                                            </div>
+                                        ) : (
+                                            <SelectField
+                                                label="Select Hospital"
+                                                name="hospitalId"
+                                                options={hospitals.map(h => ({ label: h.name, value: h.id }))}
+                                                value={form.formData.hospitalId}
+                                                onChange={form.handleChange}
+                                                onBlur={() => form.handleBlur('hospitalId')}
+                                                placeholder="Choose a hospital to join"
+                                                required
+                                            />
+                                        )}
+                                    </Motion.div>
+                                )}
 
                                 {/* Full Name Field */}
                                 <Motion.div
@@ -467,7 +514,7 @@ const Register = () => {
                                         onChange={form.handleChange}
                                         onBlur={() => form.handleBlur('email')}
                                         touched={form.touched.email}
-                                        error={validation.fieldErrors.email}
+                                        error={form.formData.email && form.touched.email ? validateEmailForUserType(form.formData.email, userType).error : null}
                                         required
                                     />
                                 </Motion.div>
@@ -505,9 +552,8 @@ const Register = () => {
                                             options={[
                                                 { label: 'Doctor', value: 'DOCTOR' },
                                                 { label: 'Nurse', value: 'NURSE' },
-                                                { label: 'Administrator', value: 'ADMIN' },
-                                                { label: 'Other Staff', value: 'STAFF' },
                                             ]}
+                                            helpText="Other staff are invited by the hospital administrator. Your account will be active once an administrator approves it."
                                             value={form.formData.role}
                                             onChange={form.handleChange}
                                             onBlur={() => form.handleBlur('role')}
@@ -517,8 +563,23 @@ const Register = () => {
                                     </Motion.div>
                                 )}
 
+                                {/* Doctor Specific Fields */}
+                                {userType === 'staff' && form.formData.role === 'DOCTOR' && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.25 }}>
+                                            <FormInput label="Specialization" name="specialization" placeholder="e.g. Cardiology" value={form.formData.specialization} onChange={form.handleChange} onBlur={() => form.handleBlur('specialization')} touched={form.touched.specialization} required />
+                                        </Motion.div>
+                                        <Motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
+                                            <FormInput label="License Number" name="licenseNumber" placeholder="e.g. MD12345" value={form.formData.licenseNumber} onChange={form.handleChange} onBlur={() => form.handleBlur('licenseNumber')} touched={form.touched.licenseNumber} required />
+                                        </Motion.div>
+                                        <Motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.35 }}>
+                                            <FormInput label="Years of Experience" name="yearsOfExperience" type="number" placeholder="e.g. 5" value={form.formData.yearsOfExperience} onChange={form.handleChange} onBlur={() => form.handleBlur('yearsOfExperience')} touched={form.touched.yearsOfExperience} required />
+                                        </Motion.div>
+                                    </div>
+                                )}
+
                                 {/* Patient Specific Fields */}
-                                {userType === 'patient' && (
+                                {userType === 'patient' && !selectedPatient && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         {/* Phone Field */}
                                         <Motion.div
