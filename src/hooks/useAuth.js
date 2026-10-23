@@ -108,7 +108,7 @@ export const useAuth = () => {
         setUserData(null);
         setError('');
         setMessage('');
-        navigate('/login/patient');
+        navigate('/auth/login/patient');
     }, [setToken, setUserData, navigate]);
 
     /**

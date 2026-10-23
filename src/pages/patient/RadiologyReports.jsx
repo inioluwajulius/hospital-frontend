@@ -18,48 +18,17 @@ const RadiologyReports = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedReport, setSelectedReport] = useState(null);
   
-  // We need patient ID to fetch radiology. The backend requires patientId in query for patient role
-  const [patientId, setPatientId] = useState(null);
-
   useEffect(() => {
-    fetchPatientData();
+    fetchRadiology();
   }, []);
 
-  const fetchPatientData = async () => {
-    try {
-      // First get current user's profile to find their patient ID
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        const user = JSON.parse(userStr);
-        // In our backend, patient is linked via userId
-        // But for radiology, we need the actual patient document ID
-        // The easiest way is to hit an endpoint that returns the patient ID or use getPatients
-        // We can just hit /patients and it should return only the current patient because of role filtering
-        const res = await api.get('/patients');
-        if (res.data && res.data.length > 0) {
-          const currentPatient = res.data[0];
-          setPatientId(currentPatient._id);
-          fetchRadiology(currentPatient._id);
-        } else {
-          setLoading(false);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch patient data:', error);
-      setLoading(false);
-    }
-  };
-
-  const fetchRadiology = async (pId) => {
+  const fetchRadiology = async () => {
     try {
       setLoading(true);
-      const response = await api.getRadiologyExams(); // Wait, api.getRadiologyExams doesn't take params?
-      // Let's use generic api.get
-      const res = await api.get(`/radiology?patientId=${pId}`);
-      if (res.data) {
-        // radiology returns an array of reports directly (not wrapped in success/data)
-        setReports(res.data);
-      }
+      // The backend scopes radiology to the logged-in patient's own reports
+      const res = await api.getRadiologyExams();
+      // radiology returns an array of reports directly (not wrapped in success/data)
+      setReports(Array.isArray(res.data) ? res.data : []);
     } catch (error) {
       console.error('Failed to fetch radiology reports:', error);
     } finally {
@@ -68,7 +37,7 @@ const RadiologyReports = () => {
   };
 
   const filteredReports = reports.filter(report => 
-    report.examType.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    report.examType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (report.bodyPart && report.bodyPart.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 

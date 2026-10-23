@@ -25,11 +25,15 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
-import { format, addDays, startOfWeek, startOfMonth, endOfMonth, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
+import { format, parse, addDays, startOfWeek, startOfMonth, endOfMonth, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { SkeletonCard } from '../../component/SkeletonLoader';
 import { EmptyState } from '../../component/EmptyState';
+
+// Backend stores lowercase statuses; the UI shows title-case labels
+const STATUS_LABELS = { scheduled: 'Scheduled', 'in-progress': 'In-Progress', completed: 'Completed', cancelled: 'Cancelled' };
+const toStatusLabel = (status) => STATUS_LABELS[String(status || 'scheduled').toLowerCase()] || status;
 
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -46,19 +50,15 @@ const Appointments = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
-  const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-  const currentUser = userStr ? JSON.parse(userStr) : null;
-
-  const [formData, setFormData] = useState({
+  const emptyForm = {
     patientId: '',
     patientName: '',
-    doctorId: currentUser?.id || currentUser?._id || '1',
-    doctorName: currentUser?.name || 'Dr. Julius Ini',
     date: format(new Date(), 'yyyy-MM-dd'),
     time: '09:00 AM',
     reason: '',
     type: 'Checkup'
-  });
+  };
+  const [formData, setFormData] = useState(emptyForm);
   const [errors, setErrors] = useState({});
 
   const currentWeekStart = startOfWeek(selectedDate);
@@ -149,8 +149,8 @@ const Appointments = () => {
     }
     setIsSubmitting(true);
     try {
-      const dateTimeString = `${formData.date} ${formData.time}`;
-      const appointmentDate = new Date(dateTimeString);
+      // Parse explicitly: new Date("yyyy-MM-dd hh:mm AM") is Invalid Date in Firefox/Safari
+      const appointmentDate = parse(`${formData.date} ${formData.time}`, 'yyyy-MM-dd hh:mm a', new Date());
       const payload = {
         patientId: formData.patientId,
         appointmentDate: appointmentDate.toISOString(),
@@ -164,20 +164,11 @@ const Appointments = () => {
       setTimeout(() => {
         setIsBookingModalOpen(false);
         setBookingSuccess(false);
-        setFormData({
-          patientId: '',
-          patientName: '',
-          doctorId: '1',
-          doctorName: 'Dr. Julius Ini',
-          date: format(new Date(), 'yyyy-MM-dd'),
-          time: '09:00 AM',
-          reason: '',
-          type: 'Checkup'
-        });
+        setFormData({ ...emptyForm, date: format(new Date(), 'yyyy-MM-dd') });
       }, 2000);
     } catch (error) {
       console.error('Booking failed:', error);
-      toast.error('Failed to book appointment.');
+      toast.error(error?.response?.data?.message || 'Failed to book appointment.');
     } finally {
       setIsSubmitting(false);
     }
@@ -185,24 +176,24 @@ const Appointments = () => {
 
   const handleUpdateStatus = async (id, status) => {
     try {
-      await api.updateAppointment(id, { status });
+      await api.updateAppointment(id, { status: status.toLowerCase() });
       setAppointments(prev => prev.map(a => a._id === id || a.id === id ? { ...a, status } : a));
       toast.success(`Appointment marked as ${status}`);
       if (selectedAppointment && (selectedAppointment.id === id || selectedAppointment._id === id)) {
         setSelectedAppointment(prev => ({ ...prev, status }));
       }
     } catch (error) {
-      toast.error('Failed to update status');
+      toast.error(error?.response?.data?.message || 'Failed to update status');
     }
   };
 
   const processedAppointments = useMemo(() => {
     return appointments.map(apt => {
       const pName = apt.patientId?.userId?.name || apt.patientId?.name || 'Unknown';
-      const dName = apt.doctorId?.name || 'Dr. Julius Ini';
+      const dName = apt.doctorId?.name || 'Unassigned';
       const dateObj = new Date(apt.appointmentDate);
       const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      return { ...apt, patientName: pName, doctorName: dName, time: timeStr, dateObj };
+      return { ...apt, status: toStatusLabel(apt.status), patientName: pName, doctorName: dName, time: timeStr, dateObj };
     }).sort((a, b) => a.dateObj - b.dateObj);
   }, [appointments]);
 
@@ -387,11 +378,11 @@ const Appointments = () => {
             </div>
             <div className="relative z-10">
               <div className="text-[10px] font-bold text-white/70 uppercase tracking-widest mb-1">Today's Volume</div>
-              <div className="text-4xl font-extrabold mb-3">{todayCount}</div>
+              <div className="text-4xl font-extrabold mb-3">{stats.total}</div>
               <p className="text-white/80 text-xs font-medium leading-relaxed">Appointments scheduled for today across all departments.</p>
               <div className="mt-5 flex items-center gap-2 text-xs font-bold bg-white/20 w-fit px-3 py-1.5 rounded-lg border border-white/10 backdrop-blur-sm">
                 <Activity size={14} />
-                {todayCount > 0 ? "ACTIVE DAY" : "QUIET DAY"}
+                {stats.total > 0 ? "ACTIVE DAY" : "QUIET DAY"}
               </div>
             </div>
           </div>

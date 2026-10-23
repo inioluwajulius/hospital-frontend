@@ -42,7 +42,6 @@ const Prescriptions = () => {
     frequency: 'Twice Daily',
     duration: '',
     instructions: '',
-    doctorName: 'Dr. Julius Ini',
     status: 'Active'
   });
   const [formErrors, setFormErrors] = useState({});
@@ -128,7 +127,6 @@ const Prescriptions = () => {
           frequency: 'Twice Daily',
           duration: '',
           instructions: '',
-          doctorName: 'Dr. Julius Ini',
           status: 'Active'
         });
       }, 2000);
@@ -146,7 +144,7 @@ const Prescriptions = () => {
       return {
         ...pres,
         patientName: pres.patientId?.userId?.name || pres.patientId?.name || 'Unknown Patient',
-        doctorName: pres.doctorId?.name || 'Dr. Julius Ini',
+        doctorName: pres.doctorId?.name || 'Unknown doctor',
         medicationName: med.name || 'N/A',
         dosage: med.dosage || 'N/A',
         frequency: med.frequency || 'N/A',

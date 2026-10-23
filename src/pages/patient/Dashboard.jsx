@@ -168,7 +168,7 @@ const PatientDashboard = () => {
     { name: 'Book Visit', icon: Calendar, color: 'blue', action: () => navigate('/patient/appointments') },
     { name: 'Request Refill', icon: Pill, color: 'emerald', action: () => navigate('/patient/prescriptions') },
     { name: 'Message Doctor', icon: MessageSquare, color: 'purple', action: () => alert('Messaging coming soon') },
-    { name: 'Download Records', icon: Download, color: 'indigo', action: () => navigate('/patient/records') }
+    { name: 'Download Records', icon: Download, color: 'indigo', action: () => navigate('/patient/medical-records') }
   ];
 
   return (
@@ -517,7 +517,7 @@ const PatientDashboard = () => {
                 Recent History
               </h3>
               <button 
-                onClick={() => navigate('/patient/records')}
+                onClick={() => navigate('/patient/medical-records')}
                 className="text-primary text-sm font-semibold flex items-center gap-1 hover:gap-2 transition-all"
               >
                 View All <ChevronRight size={16} />

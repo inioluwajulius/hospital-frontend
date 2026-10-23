@@ -41,44 +41,58 @@ const AdminDashboard = () => {
     activeAppointments: 0
   });
   const [loading, setLoading] = useState(true);
-
-  // Mock data for charts
-  const activityData = [
-    { name: 'Mon', appointments: 45, newPatients: 12 },
-    { name: 'Tue', appointments: 52, newPatients: 18 },
-    { name: 'Wed', appointments: 38, newPatients: 9 },
-    { name: 'Thu', appointments: 65, newPatients: 24 },
-    { name: 'Fri', appointments: 48, newPatients: 15 },
-    { name: 'Sat', appointments: 30, newPatients: 8 },
-    { name: 'Sun', appointments: 25, newPatients: 5 },
-  ];
-
-  const departmentData = [
-    { name: 'Cardiology', doctors: 12 },
-    { name: 'Neurology', doctors: 8 },
-    { name: 'Pediatrics', doctors: 15 },
-    { name: 'Orthopedics', doctors: 10 },
-    { name: 'General', doctors: 25 },
-  ];
+  const [activityData, setActivityData] = useState([]);
+  const [departmentData, setDepartmentData] = useState([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // Note: Replace with actual backend endpoint when available
-        // For MVP, we fetch the data from the individual lists to compute stats
-        const [doctorsRes, patientsRes, pendingRes] = await Promise.all([
-          api.get('/hospital-admin/doctors'),
-          api.get('/hospital-admin/patients'),
-          api.get('/hospital-admin/pending-doctors')
+        // One failing endpoint shouldn't blank the whole dashboard
+        const [doctorsRes, patientsRes, pendingRes, appointmentsRes] = await Promise.allSettled([
+          api.getDoctors(),
+          api.getPatients(),
+          api.get('/users/registrations/pending'),
+          api.getAppointments()
         ]);
+        const listOf = (result) => {
+          if (result.status !== 'fulfilled') return [];
+          const body = result.value?.data;
+          return Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+        };
+        const doctors = listOf(doctorsRes);
+        const patients = listOf(patientsRes);
+        const pending = listOf(pendingRes);
+        const appointments = listOf(appointmentsRes);
 
         setStats({
-          totalDoctors: doctorsRes.data?.data?.length || 0,
-          totalPatients: patientsRes.data?.data?.length || 0,
-          pendingApprovals: pendingRes.data?.data?.length || 0,
-          activeAppointments: 142 // Placeholder until appointment endpoint is ready
+          totalDoctors: doctors.filter(d => d.status !== 'pending').length,
+          totalPatients: patients.length,
+          pendingApprovals: pending.length,
+          activeAppointments: appointments.filter(a => ['scheduled', 'in-progress'].includes(String(a.status || 'scheduled').toLowerCase())).length
         });
+
+        // Last 7 days: appointments per day and patients registered per day
+        const days = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date();
+          d.setHours(0, 0, 0, 0);
+          d.setDate(d.getDate() - (6 - i));
+          return d;
+        });
+        const sameDay = (value, day) => value && new Date(value).toDateString() === day.toDateString();
+        setActivityData(days.map(day => ({
+          name: day.toLocaleDateString([], { weekday: 'short' }),
+          appointments: appointments.filter(a => sameDay(a.appointmentDate, day)).length,
+          newPatients: patients.filter(p => sameDay(p.createdAt, day)).length,
+        })));
+
+        // Doctors per department (falls back to specialization)
+        const byDepartment = {};
+        doctors.forEach(d => {
+          const dept = d.department || d.specialization || 'General';
+          byDepartment[dept] = (byDepartment[dept] || 0) + 1;
+        });
+        setDepartmentData(Object.entries(byDepartment).map(([name, count]) => ({ name, doctors: count })));
       } catch (error) {
         console.error('Error fetching admin dashboard data:', error);
       } finally {

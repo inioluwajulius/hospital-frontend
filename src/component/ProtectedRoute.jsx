@@ -5,7 +5,13 @@ import { ShieldAlert, ArrowLeft, Home } from 'lucide-react';
 const ProtectedRoute = ({ children, requiredRole = null }) => {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
+    let user = null;
+    try {
+        user = userStr ? JSON.parse(userStr) : null;
+    } catch {
+        // Corrupt stored user: treat as logged out instead of crashing the app
+        localStorage.removeItem('user');
+    }
 
     // No token = not logged in
     if (!token || !user) {

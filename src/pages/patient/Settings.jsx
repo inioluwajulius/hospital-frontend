@@ -42,10 +42,10 @@ const PatientSettings = () => {
   const fetchPatientProfile = async () => {
     try {
       setLoading(true);
-      // To get the profile, we can fetch all patients (role filtered to just this one)
+      // The backend returns only the logged-in patient's own record: { success, data: [patient] }
       const res = await api.get('/patients');
-      if (res.data && res.data.length > 0) {
-        const patient = res.data[0];
+      const patient = res.data?.data?.[0];
+      if (patient) {
         setFormData({
           phone: patient.phone || '',
           address: patient.address || '',
