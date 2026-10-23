@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom';
 import { loginUser } from '../../services/api';
 import BrandLogo from '../../component/BrandLogo';
 import { cn } from '../../lib/utils';
+import { STAFF_ROLES } from '../staff/staffUtils';
 
 const Login = () => {
   const { role } = useParams();
@@ -41,8 +42,12 @@ const Login = () => {
     
     let redirectPath = '/register';
     const userRole = user?.role?.toLowerCase() || '';
-    if (userRole === 'admin' || userRole === 'hospital_admin' || userRole === 'super_admin') {
+    if (userRole === 'super_admin' || user?.isSuperAdmin) {
+      redirectPath = '/superadmin/dashboard';
+    } else if (userRole === 'admin' || userRole === 'hospital_admin') {
       redirectPath = '/admin/dashboard';
+    } else if (STAFF_ROLES.includes(userRole)) {
+      redirectPath = '/staff/dashboard';
     } else if (userRole === 'doctor') {
       redirectPath = '/doctor/dashboard';
     } else if (userRole === 'patient') {
@@ -149,7 +154,7 @@ const Login = () => {
             <BrandLogo size='hero' showText={false} />
           </div>
           <h1 className='text-3xl font-extrabold text-slate-900 mb-2 tracking-tight'>
-            {isPatient ? 'Patient Login' : isDoctor ? 'Doctor Login' : 'Welcome Back'}
+            {isPatient ? 'Patient Login' : isDoctor ? 'Doctor & Staff Login' : 'Welcome Back'}
           </h1>
           <p className='text-sm text-slate-500 font-medium'>
             {isPatient ? 'Access your medical records' : isDoctor ? 'Access the dashboard' : 'Login to MediCare Hospital System'}

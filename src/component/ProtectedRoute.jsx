@@ -18,16 +18,18 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
         return <Navigate to="/auth/login/patient" replace />;
     }
 
-    // Normalize roles for comparison
+    // Normalize roles for comparison; requiredRole may be one role or a list
     const userRole = user.role?.toLowerCase() || '';
-    const normalizedRequiredRole = requiredRole?.toLowerCase() || '';
+    const requiredRoles = (Array.isArray(requiredRole) ? requiredRole : [requiredRole])
+        .filter(Boolean)
+        .map((r) => r.toLowerCase());
 
     // Check if user is an admin (either admin, hospital_admin or super_admin)
     const isUserAdmin = ['admin', 'hospital_admin', 'super_admin'].includes(userRole);
-    const isAdminRequired = normalizedRequiredRole === 'admin';
+    const isAdminRequired = requiredRoles.includes('admin');
 
-    // Allow access if no role is required, or user matches the role, or user is admin and admin is required
-    const hasAccess = !normalizedRequiredRole || (userRole === normalizedRequiredRole) || (isAdminRequired && isUserAdmin);
+    // Allow access if no role is required, or user matches a role, or user is admin and admin is required
+    const hasAccess = requiredRoles.length === 0 || requiredRoles.includes(userRole) || (isAdminRequired && isUserAdmin);
 
     // Debug log removed
 

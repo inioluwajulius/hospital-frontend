@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import BrandLogo from "./BrandLogo";
 import { logout } from '../services/session';
 import { 
@@ -8,9 +8,24 @@ import {
   CreditCard, ShoppingCart, LogOut, Menu, X, User, Building2
 } from "lucide-react";
 
+// Staff portal menus by role (dashboard is added for every staff role)
+const STAFF_MENUS = {
+  nurse: [
+    { label: "Patients", path: "/staff/patients", icon: <User size={20} /> },
+    { label: "Appointments", path: "/staff/appointments", icon: <Calendar size={20} /> },
+  ],
+  receptionist: [
+    { label: "Patients", path: "/staff/patients", icon: <User size={20} /> },
+    { label: "Appointments", path: "/staff/appointments", icon: <Calendar size={20} /> },
+  ],
+  lab_technician: [{ label: "Lab Work", path: "/staff/lab", icon: <Microscope size={20} /> }],
+  pharmacist: [{ label: "Pharmacy", path: "/staff/pharmacy", icon: <Pill size={20} /> }],
+  radiologist: [{ label: "Radiology", path: "/staff/radiology", icon: <Activity size={20} /> }],
+  accountant: [{ label: "Billing", path: "/staff/billing", icon: <CreditCard size={20} /> }],
+};
+
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const [user, setUser] = useState(() => {
     try {
       const userStr = localStorage.getItem('user');
@@ -51,7 +66,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       { label: "Dashboard", path: "/admin/dashboard", icon: <LayoutDashboard size={20} /> },
       { label: "Doctors", path: "/admin/doctors", icon: <Users size={20} /> },
       { label: "Patients", path: "/admin/patients", icon: <User size={20} /> },
-      { label: "Doctor Approvals", path: "/admin/pending-approvals", icon: <UserCheck size={20} /> },
+      { label: "Staff", path: "/admin/staff", icon: <Users size={20} /> },
+      { label: "Approvals", path: "/admin/pending-approvals", icon: <UserCheck size={20} /> },
       { label: "Audit Logs", path: "/admin/audit-logs", icon: <ClipboardList size={20} /> },
       { label: "Settings", path: "/admin/settings", icon: <Settings size={20} /> },
     ];
@@ -63,6 +79,11 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       { label: "Medical Records", path: "/doctor/medical-records", icon: <FolderHeart size={20} /> },
       { label: "Lab Tests", path: "/doctor/lab-tests", icon: <Microscope size={20} /> },
       { label: "Radiology", path: "/doctor/radiology", icon: <Activity size={20} /> },
+    ];
+  } else if (STAFF_MENUS[userRole]) {
+    items = [
+      { label: "Dashboard", path: "/staff/dashboard", icon: <LayoutDashboard size={20} /> },
+      ...STAFF_MENUS[userRole],
     ];
   } else if (userRole === 'patient') {
     items = [

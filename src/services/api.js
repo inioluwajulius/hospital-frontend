@@ -105,6 +105,14 @@ export const markAllNotificationsAsRead = () => API.patch("/notifications/read-a
 export const updateAppointment = (id, data) => API.put(`/appointments/${id}`, data);
 export const updateMedicalRecord = (id, data) => API.put(`/medical-records/${id}`, data);
 export const updateLabTest = (id, data) => API.put(`/lab/${id}`, data);
+export const updateLabOrder = (id, data) => API.put(`/lab/tests/${id}`, data);
+export const fileRadiologyReport = (id, data) => API.put(`/radiology/${id}/report`, data);
+export const updateDrugStock = (id, stock) => API.patch(`/pharmacy/drugs/${id}/stock`, { stock });
+export const dispenseDrug = (data) => API.post("/pharmacy/dispense", data);
+export const getStaff = () => API.get("/hospital-admin/staff?limit=100");
+export const inviteStaff = (data) => API.post("/hospital-admin/staff/invite", data);
+export const resendInvitation = (userId) => API.post(`/hospital-admin/staff/${userId}/resend-invitation`);
+export const acceptInvitation = (token, data) => API.post(`/hospital-admin/invitations/${token}/accept`, data);
 export const updatePrescription = (id, data) => API.put(`/prescriptions/${id}`, data);
 export const updateDrug = (id, data) => API.put(`/pharmacy/drugs/${id}`, data);
 export const updateRadiologyExam = (id, data) => API.put(`/radiology/${id}`, data);
@@ -183,6 +191,14 @@ export const api = {
     updateAppointment,
     updateMedicalRecord,
     updateLabTest,
+    updateLabOrder,
+    fileRadiologyReport,
+    updateDrugStock,
+    dispenseDrug,
+    getStaff,
+    inviteStaff,
+    resendInvitation,
+    acceptInvitation,
     updateDoctor,
     updatePrescription,
     markNotificationAsRead,
