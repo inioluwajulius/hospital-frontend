@@ -27,6 +27,10 @@ API.interceptors.request.use(
 API.interceptors.response.use(
     (response) => response,
     (error) => {
+        // A temporary password must be replaced before anything else
+        if (error.response?.status === 403 && error.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED' && window.location.pathname !== '/account/change-password') {
+            window.location.href = '/account/change-password';
+        }
         if (error.response?.status === 401) {
             let role = '';
             try {
@@ -118,6 +122,14 @@ export const getStaff = () => API.get("/hospital-admin/staff?limit=100");
 export const inviteStaff = (data) => API.post("/hospital-admin/staff/invite", data);
 export const resendInvitation = (userId) => API.post(`/hospital-admin/staff/${userId}/resend-invitation`);
 export const acceptInvitation = (token, data) => API.post(`/hospital-admin/invitations/${token}/accept`, data);
+// Telemedicine
+export const getConsultation = (id) => API.get(`/consultations/${id}`);
+export const getConsultationMessages = (id, after) => API.get(`/consultations/${id}/messages`, { params: after ? { after } : {} });
+export const sendConsultationMessage = (id, data) => API.post(`/consultations/${id}/messages`, data);
+export const startConsultation = (id) => API.post(`/consultations/${id}/start`);
+export const completeConsultation = (id, data) => API.post(`/consultations/${id}/complete`, data);
+export const getIceServers = () => API.get("/consultations/ice-servers");
+export const updateMyAvailability = (availability) => API.put("/doctors/me/availability", { availability });
 export const updatePrescription = (id, data) => API.put(`/prescriptions/${id}`, data);
 export const updateDrug = (id, data) => API.put(`/pharmacy/drugs/${id}`, data);
 export const updateRadiologyExam = (id, data) => API.put(`/radiology/${id}`, data);
@@ -145,6 +157,7 @@ export const api = {
     get: (url) => API.get(url),
     post: (url, data) => API.post(url, data),
     put: (url, data) => API.put(url, data),
+    patch: (url, data) => API.patch(url, data),
     delete: (url) => API.delete(url),
     
     // GET methods
@@ -208,6 +221,13 @@ export const api = {
     inviteStaff,
     resendInvitation,
     acceptInvitation,
+    getConsultation,
+    getConsultationMessages,
+    sendConsultationMessage,
+    startConsultation,
+    completeConsultation,
+    getIceServers,
+    updateMyAvailability,
     updateDoctor,
     updatePrescription,
     markNotificationAsRead,

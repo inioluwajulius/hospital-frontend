@@ -5,7 +5,7 @@ import { logout } from '../services/session';
 import { 
   Users, UserCheck, ClipboardList, Settings,
   LayoutDashboard, Calendar, Pill, FolderHeart, Microscope, Activity,
-  CreditCard, ShoppingCart, LogOut, Menu, X, User, Building2
+  CreditCard, ShoppingCart, LogOut, Menu, X, User, Building2, Video, MessageSquare
 } from "lucide-react";
 
 // Staff portal menus by role (dashboard is added for every staff role)
@@ -79,6 +79,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
       { label: "Medical Records", path: "/doctor/medical-records", icon: <FolderHeart size={20} /> },
       { label: "Lab Tests", path: "/doctor/lab-tests", icon: <Microscope size={20} /> },
       { label: "Radiology", path: "/doctor/radiology", icon: <Activity size={20} /> },
+      { label: "Telemedicine", path: "/telemedicine", icon: <Video size={20} /> },
+      { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
     ];
   } else if (STAFF_MENUS[userRole]) {
     items = [
@@ -89,6 +91,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     items = [
       { label: "Dashboard", path: "/patient/dashboard", icon: <LayoutDashboard size={20} /> },
       { label: "Appointments", path: "/patient/appointments", icon: <Calendar size={20} /> },
+      { label: "Messages", path: "/messages", icon: <MessageSquare size={20} /> },
+      { label: "Telemedicine", path: "/telemedicine", icon: <Video size={20} /> },
       { label: "Prescriptions", path: "/patient/prescriptions", icon: <Pill size={20} /> },
       { label: "Medical Records", path: "/patient/medical-records", icon: <FolderHeart size={20} /> },
       { label: "Lab Results", path: "/patient/lab-results", icon: <Microscope size={20} /> },

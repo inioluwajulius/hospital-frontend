@@ -10,7 +10,7 @@ const STATUS_TONES = { scheduled: 'blue', 'in-progress': 'amber', completed: 'gr
 const FILTERS = ['upcoming', 'today', 'all'];
 const TIMES = ['08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM'];
 
-const emptyBooking = () => ({ patientId: '', doctorId: '', date: format(new Date(), 'yyyy-MM-dd'), time: '09:00 AM', reason: '', isUrgent: false });
+const emptyBooking = () => ({ patientId: '', doctorId: '', date: format(new Date(), 'yyyy-MM-dd'), time: '09:00 AM', reason: '', isUrgent: false, mode: 'in-person' });
 
 const StaffAppointments = () => {
   const canManage = getCurrentUser()?.role === 'receptionist';
@@ -84,6 +84,7 @@ const StaffAppointments = () => {
         appointmentDate: appointmentDate.toISOString(),
         reason: booking.reason,
         isUrgent: booking.isUrgent,
+        mode: booking.mode,
       });
       toast.success('Appointment booked');
       setIsBookingOpen(false);
@@ -183,6 +184,10 @@ const StaffAppointments = () => {
             <Field label="Date"><TextInput type="date" name="date" value={booking.date} onChange={setField} min={format(new Date(), 'yyyy-MM-dd')} /></Field>
             <Field label="Time"><Select name="time" value={booking.time} onChange={setField} options={TIMES.map((t) => ({ value: t, label: t }))} /></Field>
           </div>
+          <Field label="Visit type">
+            <Select name="mode" value={booking.mode} onChange={setField}
+              options={[{ value: 'in-person', label: 'In person' }, { value: 'telemedicine', label: 'Video consultation (telemedicine)' }]} />
+          </Field>
           <Field label="Reason"><TextArea name="reason" value={booking.reason} onChange={setField} /></Field>
           <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
             <input type="checkbox" name="isUrgent" checked={booking.isUrgent} onChange={setField} className="w-4 h-4 rounded" />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, MoreVertical } from 'lucide-react';
+import { Plus, Search, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 
@@ -69,7 +69,7 @@ const HospitalsList = () => {
                 </tr>
               ) : hospitals.length > 0 ? (
                 hospitals.map((hospital) => (
-                  <tr key={hospital._id} className="hover:bg-slate-50/50 transition-colors">
+                  <tr key={hospital._id} onClick={() => navigate(`/superadmin/hospitals/${hospital._id}`)} className="hover:bg-slate-50/50 transition-colors cursor-pointer">
                     <td className="py-4 px-6">
                       <div className="font-bold text-slate-900">{hospital.name}</div>
                     </td>
@@ -84,8 +84,13 @@ const HospitalsList = () => {
                     </td>
                     <td className="py-4 px-6 text-sm font-semibold text-slate-600 capitalize">{hospital.subscriptionTier}</td>
                     <td className="py-4 px-6 text-right">
-                      <button className="text-slate-400 hover:text-emerald-600 transition-colors">
-                        <MoreVertical size={18} />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/superadmin/hospitals/${hospital._id}`); }}
+                        className="inline-flex items-center gap-1 text-sm font-bold text-emerald-700 hover:text-emerald-800"
+                        aria-label={`Manage ${hospital.name}`}
+                      >
+                        Manage <ChevronRight size={16} />
                       </button>
                     </td>
                   </tr>

@@ -28,6 +28,9 @@ import AdminStaff from "./pages/admin/Staff";
 import SuperAdminDashboard from "./pages/superadmin/Dashboard";
 import SuperAdminHospitals from "./pages/superadmin/Hospitals";
 import SuperAdminCreateHospital from "./pages/superadmin/CreateHospital";
+import SuperAdminHospitalDetails from "./pages/superadmin/HospitalDetails";
+import Messages from "./pages/messages/Messages";
+import ChangePassword from "./pages/auth/ChangePassword";
 
 // Doctor Pages
 import DoctorDashboard from "./pages/doctor/Dashboard";
@@ -36,6 +39,9 @@ import DoctorPrescriptions from "./pages/doctor/Prescriptions";
 import DoctorMedicalRecords from "./pages/doctor/MedicalRecords";
 import DoctorLabTest from "./pages/doctor/LabTest";
 import DoctorRadiology from "./pages/doctor/Radiology";
+// Telemedicine
+import Telemedicine from "./pages/telemedicine/Telemedicine";
+import ConsultationRoom from "./pages/telemedicine/ConsultationRoom";
 
 // Patient Pages
 import PatientDashboard from "./pages/patient/Dashboard";
@@ -86,6 +92,7 @@ function App() {
           <Route path="/auth/verify-email" element={<VerifyEmailCode />} />
           <Route path="/auth/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/auth/accept-invite/:token" element={<AcceptInvite />} />
+          <Route path="/account/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
           
           {/* ========== ADMIN ROUTES ========== */}
           <Route element={<DashboardLayout />}>
@@ -107,6 +114,7 @@ function App() {
             <Route path="/superadmin/dashboard" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminDashboard /></ProtectedRoute>} />
             <Route path="/superadmin/hospitals" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminHospitals /></ProtectedRoute>} />
             <Route path="/superadmin/hospitals/new" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminCreateHospital /></ProtectedRoute>} />
+            <Route path="/superadmin/hospitals/:id" element={<ProtectedRoute requiredRole="super_admin"><SuperAdminHospitalDetails /></ProtectedRoute>} />
           </Route>
 
           {/* ========== DOCTOR ROUTES ========== */}
@@ -117,6 +125,9 @@ function App() {
             <Route path="/doctor/medical-records" element={<ProtectedRoute requiredRole="doctor"><DoctorMedicalRecords /></ProtectedRoute>} />
             <Route path="/doctor/lab-tests" element={<ProtectedRoute requiredRole="doctor"><DoctorLabTest /></ProtectedRoute>} />
             <Route path="/doctor/radiology" element={<ProtectedRoute requiredRole="doctor"><DoctorRadiology /></ProtectedRoute>} />
+            <Route path="/messages" element={<ProtectedRoute requiredRole={['doctor', 'patient']}><Messages /></ProtectedRoute>} />
+            <Route path="/telemedicine" element={<ProtectedRoute requiredRole={['doctor', 'patient']}><Telemedicine /></ProtectedRoute>} />
+            <Route path="/consultation/:id" element={<ProtectedRoute requiredRole={['doctor', 'patient']}><ConsultationRoom /></ProtectedRoute>} />
           </Route>
 
           {/* ========== PATIENT ROUTES ========== */}

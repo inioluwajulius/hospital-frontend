@@ -167,7 +167,7 @@ const PatientDashboard = () => {
   const quickActions = [
     { name: 'Book Visit', icon: Calendar, color: 'blue', action: () => navigate('/patient/appointments') },
     { name: 'Request Refill', icon: Pill, color: 'emerald', action: () => navigate('/patient/prescriptions') },
-    { name: 'Message Doctor', icon: MessageSquare, color: 'purple', action: () => alert('Messaging coming soon') },
+    { name: 'Message Doctor', icon: MessageSquare, color: 'purple', action: () => navigate('/messages') },
     { name: 'Download Records', icon: Download, color: 'indigo', action: () => navigate('/patient/medical-records') }
   ];
 

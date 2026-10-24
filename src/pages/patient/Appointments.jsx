@@ -14,8 +14,11 @@ import {
   ChevronRight,
   Activity,
   Stethoscope,
-  AlignLeft
+  AlignLeft,
+  Video
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { formatAvailability } from '../../utils/availability';
 import { motion, AnimatePresence } from 'framer-motion';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, format, addMonths, subMonths, isToday } from 'date-fns';
 import { cn } from '../../lib/utils';
@@ -102,7 +105,7 @@ const AppointmentCard = ({ appointment, onCancel, isCancelling }) => {
             <div className="p-1.5 bg-white rounded-lg shadow-sm text-slate-400">
               <MapPin size={16} />
             </div>
-            {appointment.location || 'Hospital Main Building'}
+            {appointment.mode === 'telemedicine' ? 'Video consultation (online)' : (appointment.location || 'Hospital Main Building')}
           </div>
         </div>
       </div>
@@ -116,9 +119,21 @@ const AppointmentCard = ({ appointment, onCancel, isCancelling }) => {
         </div>
       )}
 
+      {appointment.mode === 'telemedicine' && ['scheduled', 'in-progress'].includes(appointment.status) && (
+        <div className="pt-2">
+          <Link
+            to={`/consultation/${appointment._id}`}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-2xl text-sm font-bold transition-all flex justify-center items-center gap-2 shadow-lg shadow-emerald-600/20"
+          >
+            <Video size={18} />
+            {appointment.status === 'in-progress' ? 'Join consultation now' : 'Open consultation room'}
+          </Link>
+        </div>
+      )}
+
       {appointment.status === 'scheduled' && (
         <div className="mt-auto pt-2">
-          <button 
+          <button  
             disabled={isCancelling}
             onClick={() => onCancel(appointment._id)} 
             className="w-full bg-white border-2 border-red-100 hover:border-red-200 hover:bg-red-50 text-red-600 py-3 rounded-2xl text-sm font-bold transition-all flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -147,8 +162,10 @@ const PatientAppointments = () => {
     appointmentDate: '',
     time: '',
     reason: '',
-    isUrgent: false
+    isUrgent: false,
+    mode: 'in-person'
   });
+  const selectedDoctor = doctors.find(d => d._id === newAppointment.doctorId);
 
   useEffect(() => {
     fetchData();
@@ -196,16 +213,18 @@ const PatientAppointments = () => {
         doctorId: newAppointment.doctorId,
         appointmentDate: dateTime,
         reason: newAppointment.reason,
-        isUrgent: newAppointment.isUrgent
+        isUrgent: newAppointment.isUrgent,
+        mode: newAppointment.mode
       });
-      
-      toast.success('Appointment booked successfully!');
+
+      toast.success(newAppointment.mode === 'telemedicine' ? 'Video consultation booked! Join it from your appointments.' : 'Appointment booked successfully!');
       setShowModal(false);
-      setNewAppointment({ doctorId: '', appointmentDate: '', time: '', reason: '', isUrgent: false });
+      setNewAppointment({ doctorId: '', appointmentDate: '', time: '', reason: '', isUrgent: false, mode: 'in-person' });
       fetchData();
     } catch (err) {
       console.error('Failed to book appointment', err);
-      toast.error('Failed to book appointment. Please try again.');
+      // Show the server's reason (e.g. doctor unavailable or slot already booked)
+      toast.error(err?.response?.data?.message || (err?.response ? 'Failed to book appointment. Please try again.' : "We couldn't reach the server. Check your connection and try again."));
     } finally {
       setIsBooking(false);
     }
@@ -493,6 +512,41 @@ const PatientAppointments = () => {
                     </div>
                   </div>
                   
+                  {selectedDoctor && (
+                    <p className="text-xs text-slate-500 font-medium -mt-2 ml-1">
+                      <span className="font-bold text-slate-700">Available:</span> {formatAvailability(selectedDoctor.availability, 'Any time during clinic hours')}
+                    </p>
+                  )}
+
+                  {/* Visit type */}
+                  <div className="space-y-2">
+                    <span className="block text-sm font-bold text-slate-700 ml-1">Visit type</span>
+                    <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-label="Visit type">
+                      {[
+                        { value: 'in-person', label: 'In person', hint: 'Visit the hospital', icon: MapPin },
+                        { value: 'telemedicine', label: 'Video consultation', hint: 'From home, low data', icon: Video },
+                      ].map(({ value, label, hint, icon: Icon }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          role="radio"
+                          aria-checked={newAppointment.mode === value}
+                          onClick={() => setNewAppointment({ ...newAppointment, mode: value })}
+                          className={cn(
+                            'flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all',
+                            newAppointment.mode === value ? 'border-emerald-500 bg-emerald-50' : 'border-slate-100 bg-slate-50 hover:border-slate-200'
+                          )}
+                        >
+                          <Icon size={20} className={newAppointment.mode === value ? 'text-emerald-600' : 'text-slate-400'} />
+                          <span>
+                            <span className="block text-sm font-bold text-slate-800">{label}</span>
+                            <span className="block text-xs text-slate-500">{hint}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Date and Time Row */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                     <div className="space-y-2">

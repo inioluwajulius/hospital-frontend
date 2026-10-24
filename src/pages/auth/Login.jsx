@@ -40,6 +40,10 @@ const Login = () => {
     localStorage.setItem('token', response.data.token);
     const user = response.data.user;
     localStorage.setItem('user', JSON.stringify(user));
+    if (response.data.mustChangePassword) {
+      window.location.href = '/account/change-password';
+      return;
+    }
     
     let redirectPath = '/register';
     const userRole = user?.role?.toLowerCase() || '';

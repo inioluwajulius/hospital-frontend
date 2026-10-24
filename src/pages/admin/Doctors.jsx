@@ -17,6 +17,7 @@ import {
   Star,
   ChevronRight
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,6 +26,7 @@ import { EmptyState } from '../../component/EmptyState';
 import { SkeletonCard } from '../../component/SkeletonLoader';
 
 const Doctors = () => {
+  const navigate = useNavigate();
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -516,7 +518,7 @@ const Doctors = () => {
               <div className="p-6 border-t border-slate-100 bg-slate-50">
                 <button 
                   onClick={() => {
-                    toast.success('Edit functionality coming soon');
+                    navigate(`/admin/staff?user=${selectedDoctor._id || selectedDoctor.id}`);
                   }}
                   className="w-full py-4 bg-slate-900 text-white font-extrabold rounded-2xl hover:bg-slate-800 transition-all active:scale-95 shadow-lg"
                 >

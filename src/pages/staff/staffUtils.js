@@ -12,6 +12,7 @@ export const ROLE_LABELS = {
   accountant: 'Accountant',
   doctor: 'Doctor',
   hospital_admin: 'Hospital Admin',
+  patient: 'Patient',
 };
 
 export const getCurrentUser = () => {

@@ -57,7 +57,9 @@ const Register = () => {
             console.error('Failed to load hospitals', err);
             setHospitalsError(err.response
                 ? 'We couldn\'t load the list of hospitals. Please try again.'
-                : 'We couldn\'t reach the server to load hospitals. Check your connection and try again.');
+                : 'We couldn\'t reach the server to load hospitals. Check your connection and try again.'
+                    // Local development: the usual cause is that only the frontend was started
+                    + (import.meta.env.DEV ? ' (Development: is the backend running? Start both with "npm run dev" from the project root.)' : ''));
         } finally {
             setIsLoadingHospitals(false);
         }
