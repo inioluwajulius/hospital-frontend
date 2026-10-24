@@ -14,7 +14,15 @@ const PatientBilling = ({ showNotification } = {}) => {
     const fetchInvoices = async () => {
       try {
         const res = await api.getInvoices?.() || Promise.resolve({ data: [] });
-        setInvoices(res?.data?.data || res?.data || []);
+        const list = res?.data?.data || res?.data || [];
+        // Backend invoices have items/totalAmount and lowercase statuses; normalise for display
+        const statusLabels = { paid: 'Paid', unpaid: 'Pending', cancelled: 'Cancelled' };
+        setInvoices(Array.isArray(list) ? list.map(inv => ({
+          ...inv,
+          amount: inv.totalAmount ?? inv.amount ?? 0,
+          description: inv.description || inv.items?.map(i => i.description).filter(Boolean).join(', ') || undefined,
+          status: statusLabels[inv.status] || inv.status,
+        })) : []);
       } catch (error) {
         console.error('Error fetching invoices:', error);
       } finally {

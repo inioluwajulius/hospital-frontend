@@ -28,9 +28,16 @@ API.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
+            let role = '';
+            try {
+                role = JSON.parse(localStorage.getItem('user') || '{}').role || '';
+            } catch {
+                // ignore corrupt stored user
+            }
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.href = '/auth/login/patient';
+            // Staff log in on the doctor/staff login page, patients on the patient one
+            window.location.href = role && role !== 'patient' ? '/auth/login/doctor' : '/auth/login/patient';
         }
         return Promise.reject(error);
     }
@@ -49,7 +56,10 @@ export const getAppointments = () => API.get("/appointments");
 export const getAppointment = (id) => API.get(`/appointments/${id}`);
 export const getMedicalRecords = () => API.get("/medical-records");
 export const getMedicalRecord = (id) => API.get(`/medical-records/${id}`);
+// Lab results (filed by lab technicians)
 export const getLabTests = () => API.get("/lab");
+// Lab test orders (placed by doctors)
+export const getLabOrders = () => API.get("/lab/tests");
 export const getLabTest = (id) => API.get(`/lab/${id}`);
 export const getDrugs = () => API.get("/pharmacy/drugs");
 export const getDrug = (id) => API.get(`/pharmacy/drugs/${id}`);
@@ -77,6 +87,7 @@ export const createDoctor = (data) => API.post("/doctors", data);
 export const createAppointment = (data) => API.post("/appointments", data);
 export const createMedicalRecord = (data) => API.post("/medical-records", data);
 export const createLabTest = (data) => API.post("/lab", data);
+export const createLabOrder = (data) => API.post("/lab/tests", data);
 export const createDrug = (data) => API.post("/pharmacy/drugs", data);
 export const createRadiologyExam = (data) => API.post("/radiology", data);
 export const createInvoice = (data) => API.post("/billing", data);
@@ -97,7 +108,7 @@ export const updateLabTest = (id, data) => API.put(`/lab/${id}`, data);
 export const updatePrescription = (id, data) => API.put(`/prescriptions/${id}`, data);
 export const updateDrug = (id, data) => API.put(`/pharmacy/drugs/${id}`, data);
 export const updateRadiologyExam = (id, data) => API.put(`/radiology/${id}`, data);
-export const updateInvoice = (id, data) => API.put(`/billing/${id}`, data);
+export const payInvoice = (id, data) => API.put(`/billing/${id}/pay`, data);
 
 // DELETE methods - V1 Endpoints
 export const deletePatient = (id) => API.delete(`/patients/${id}`);
@@ -131,6 +142,7 @@ export const api = {
     getMedicalRecords,
     getMedicalRecord,
     getLabTests,
+    getLabOrders,
     getLabTest,
     getDrugs,
     getDrug,
@@ -153,6 +165,7 @@ export const api = {
     createAppointment,
     createMedicalRecord,
     createLabTest,
+    createLabOrder,
     createDrug,
     createRadiologyExam,
     createInvoice,
@@ -176,7 +189,7 @@ export const api = {
     markAllNotificationsAsRead,
     updateDrug,
     updateRadiologyExam,
-    updateInvoice,
+    payInvoice,
     // DELETE methods
     deletePatient,
     deleteAppointment,

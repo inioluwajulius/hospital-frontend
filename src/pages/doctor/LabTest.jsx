@@ -18,13 +18,37 @@ import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Patients API returns { success, data: [Patient] } with the account in userId
+const toPatientOptions = (res) =>
+  (res?.data?.data || []).map(p => ({
+    id: p._id,
+    name: p.userId?.name || p.name || p.patientCardNumber,
+  }));
+
+const patientNameOf = (patient) =>
+  patient?.userId?.name || patient?.name || patient?.patientCardNumber || '';
+
+const LAB_CATEGORIES = ['Blood', 'Urine', 'Biochemistry', 'Microbiology', 'Imaging'];
+
+// Lab orders API returns { success, data: [LabTest] }
+const toLabRows = (res) =>
+  (res?.data?.data || []).map(t => ({
+    id: t._id,
+    testName: t.testName,
+    category: t.category,
+    priority: t.priority,
+    status: t.status,
+    patientName: patientNameOf(t.patientId),
+    date: new Date(t.date || t.createdAt).toLocaleDateString(),
+  }));
+
 const LabTest = ({ showNotification }) => {
   const [tests, setTests] = useState([]);
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('latest');
-  const [categoryFilters, setCategoryFilters] = useState(['Blood']);
+  const [categoryFilters, setCategoryFilters] = useState(LAB_CATEGORIES);
   const [statusFilter, setStatusFilter] = useState('All');
 
   const handleExport = () => {
@@ -44,21 +68,21 @@ const LabTest = ({ showNotification }) => {
     patientName: '',
     testName: '',
     category: 'Blood',
-    requestedBy: 'Dr. Julius Ini',
     priority: 'Normal'
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [testsData, patientsData] = await Promise.all([
-          api.getLabTests?.() || Promise.resolve([]),
+        const [testsRes, patientsRes] = await Promise.all([
+          api.getLabOrders(),
           api.getPatients()
         ]);
-        setTests(testsData || []);
-        setPatients(patientsData || []);
+        setTests(toLabRows(testsRes));
+        setPatients(toPatientOptions(patientsRes));
       } catch (error) {
         console.error('Error fetching data:', error);
+        showNotification?.(error?.response?.data?.error || error?.response?.data?.message || 'Could not load lab tests.', 'error');
       } finally {
         setLoading(false);
       }
@@ -87,14 +111,18 @@ const LabTest = ({ showNotification }) => {
 
     setIsSubmitting(true);
     try {
-      await api.createLabTest?.(formData);
+      await api.createLabOrder({
+        patientId: formData.patientId,
+        testName: formData.testName,
+        category: formData.category,
+        priority: formData.priority,
+      });
       setSuccess(true);
       if (showNotification) {
         showNotification('Lab test request created successfully!', 'success');
       }
-      
-      const updatedTests = await api.getLabTests?.() || [];
-      setTests(updatedTests);
+
+      setTests(toLabRows(await api.getLabOrders()));
 
       setTimeout(() => {
         setIsModalOpen(false);
@@ -104,12 +132,12 @@ const LabTest = ({ showNotification }) => {
           patientName: '',
           testName: '',
           category: 'Blood',
-          requestedBy: 'Dr. Julius Ini',
           priority: 'Normal'
         });
       }, 2000);
     } catch (error) {
       console.error('Failed to create lab test:', error);
+      showNotification?.(error?.response?.data?.error || error?.response?.data?.message || 'Could not create the lab test request.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -303,7 +331,7 @@ const LabTest = ({ showNotification }) => {
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Category</label>
                 <div className="space-y-3">
-                  {['Blood', 'Urine', 'Biochemistry', 'Microbiology', 'Imaging'].map((cat) => (
+                  {LAB_CATEGORIES.map((cat) => (
                     <label key={cat} className="flex items-center gap-3 cursor-pointer group">
                       <input 
                         type="checkbox" 

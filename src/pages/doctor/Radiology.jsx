@@ -18,13 +18,42 @@ import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
+
+// Patients API returns { success, data: [Patient] } with the account in userId
+const toPatientOptions = (res) =>
+  (res?.data?.data || []).map(p => ({
+    id: p._id,
+    name: p.userId?.name || p.name || p.patientCardNumber,
+  }));
+
+const patientNameOf = (patient) =>
+  patient?.userId?.name || patient?.name || patient?.patientCardNumber || '';
+
+// Form labels <-> backend examType / priority / status values
+const MODALITIES = { 'MRI': 'mri', 'CT Scan': 'ct', 'X-Ray': 'xray', 'Ultrasound': 'ultrasound', 'PET Scan': 'pet' };
+const MODALITY_LABELS = Object.fromEntries(Object.entries(MODALITIES).map(([label, value]) => [value, label]));
+const PRIORITY_LABELS = { routine: 'Routine', urgent: 'Urgent', stat: 'STAT' };
+const STATUS_LABELS = { ordered: 'Pending', scheduled: 'Pending', pending_review: 'In-Progress', completed: 'Completed', reviewed: 'Completed' };
+
+// Radiology API returns a bare array of exams
+const toExamRows = (res) =>
+  (Array.isArray(res?.data) ? res.data : res?.data?.data || []).map(e => ({
+    id: e.examOrder || e._id,
+    type: e.bodyPart || MODALITY_LABELS[e.examType] || e.examType,
+    modality: MODALITY_LABELS[e.examType] || 'Other',
+    priority: PRIORITY_LABELS[e.priority] || e.priority,
+    status: STATUS_LABELS[e.status] || e.status,
+    patientName: patientNameOf(e.patientId),
+    date: new Date(e.examDate || e.orderedDate || e.createdAt).toLocaleDateString(),
+  }));
+
 const Radiology = ({ showNotification } = {}) => {
   const [exams, setExams] = useState([]);
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('active');
-  const [modalityFilters, setModalityFilters] = useState(['MRI']);
+  const [modalityFilters, setModalityFilters] = useState(Object.keys(MODALITIES));
   const [priorityFilter, setPriorityFilter] = useState('All');
 
   const handleScheduleScan = () => {
@@ -44,21 +73,21 @@ const Radiology = ({ showNotification } = {}) => {
     patientName: '',
     type: '',
     modality: 'MRI',
-    priority: 'Routine',
-    radiologist: 'Dr. Elena Vance'
+    priority: 'Routine'
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [examsData, patientsData] = await Promise.all([
-          api.getRadiologyExams?.() || Promise.resolve([]),
+        const [examsRes, patientsRes] = await Promise.all([
+          api.getRadiologyExams(),
           api.getPatients()
         ]);
-        setExams(examsData || []);
-        setPatients(patientsData || []);
+        setExams(toExamRows(examsRes));
+        setPatients(toPatientOptions(patientsRes));
       } catch (error) {
         console.error('Error fetching data:', error);
+        showNotification?.(error?.response?.data?.error || error?.response?.data?.message || 'Could not load imaging orders.', 'error');
       } finally {
         setLoading(false);
       }
@@ -87,14 +116,18 @@ const Radiology = ({ showNotification } = {}) => {
 
     setIsSubmitting(true);
     try {
-      await api.createRadiologyExam?.(formData);
+      await api.createRadiologyExam({
+        patientId: formData.patientId,
+        examType: MODALITIES[formData.modality] || 'other',
+        bodyPart: formData.type,
+        priority: formData.priority.toLowerCase(),
+      });
       setSuccess(true);
       if (showNotification) {
         showNotification('Radiology exam requested successfully!', 'success');
       }
-      
-      const updatedExams = await api.getRadiologyExams?.() || [];
-      setExams(updatedExams);
+
+      setExams(toExamRows(await api.getRadiologyExams()));
 
       setTimeout(() => {
         setIsModalOpen(false);
@@ -104,12 +137,12 @@ const Radiology = ({ showNotification } = {}) => {
           patientName: '',
           type: '',
           modality: 'MRI',
-          priority: 'Routine',
-          radiologist: 'Dr. Elena Vance'
+          priority: 'Routine'
         });
       }, 2000);
     } catch (error) {
       console.error('Failed to create imaging order:', error);
+      showNotification?.(error?.response?.data?.error || error?.response?.data?.message || 'Could not create the imaging order.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -303,7 +336,7 @@ const Radiology = ({ showNotification } = {}) => {
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Modality</label>
                 <div className="space-y-3">
-                  {['MRI', 'CT Scan', 'X-Ray', 'Ultrasound', 'PET Scan'].map((mod) => (
+                  {Object.keys(MODALITIES).map((mod) => (
                     <label key={mod} className="flex items-center gap-3 cursor-pointer group">
                       <input 
                         type="checkbox" 

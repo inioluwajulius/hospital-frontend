@@ -38,25 +38,18 @@ export const isPersonalEmail = (email) => {
  * @param {string} userType - 'patient' or 'staff'
  * @returns {object} - { isValid: boolean, error: string|null }
  */
+// eslint-disable-next-line no-unused-vars
 export const validateEmailForUserType = (email, userType) => {
     if (!email) {
         return { isValid: false, error: VALIDATION_ERRORS.EMAIL_REQUIRED };
     }
 
-    if (!isValidEmailFormat(email)) {
+    if (!isValidEmailFormat(email.trim())) {
         return { isValid: false, error: VALIDATION_ERRORS.EMAIL_INVALID };
     }
 
-    if (userType === 'patient') {
-        if (!isPersonalEmail(email)) {
-            return { isValid: false, error: VALIDATION_ERRORS.EMAIL_NOT_PERSONAL };
-        }
-    } else if (userType === 'staff') {
-        if (!isStaffEmail(email)) {
-            return { isValid: false, error: VALIDATION_ERRORS.EMAIL_NOT_STAFF };
-        }
-    }
-
+    // No domain restriction: the backend accepts any valid email for both
+    // staff and patients (see authController.register).
     return { isValid: true, error: null };
 };
 

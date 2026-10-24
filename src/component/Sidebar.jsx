@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import BrandLogo from "./BrandLogo";
+import { logout } from '../services/session';
 import { 
   Users, UserCheck, ClipboardList, Settings,
   LayoutDashboard, Calendar, Pill, FolderHeart, Microscope, Activity,
@@ -79,11 +80,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
 
   const isActive = (path) => location.pathname === path;
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/auth/login/patient');
-  };
+  const handleLogout = logout;
 
   return (
     <>

@@ -1,7 +1,8 @@
 import { io } from 'socket.io-client';
 
+// The socket server is the backend host (the API base URL without /api/v1),
+// not the frontend's own origin.
 const getSocketURL = () => {
-    if (import.meta.env.PROD) return window.location.origin;
     let apiUrl = import.meta.env.VITE_API_BASE_URL || "https://hospital-backend-xdjf.onrender.com";
     if (apiUrl.endsWith('/api/v1')) apiUrl = apiUrl.replace('/api/v1', '');
     if (apiUrl.endsWith('/api')) apiUrl = apiUrl.replace('/api', '');
@@ -20,6 +21,8 @@ export const initSocket = () => {
     if (!token) return null;
 
     socket = io(SOCKET_URL, {
+        auth: { token },
+        // Kept for backends deployed before handshake.auth support; remove once updated
         query: { token }
     });
 

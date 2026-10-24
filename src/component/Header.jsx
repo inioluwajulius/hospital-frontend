@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { initSocket } from '../services/socket';
+import { logout } from '../services/session';
 
 export const Header = ({ user, onMenuClick }) => {
   const [showNotifications, setShowNotifications] = useState(false);
@@ -92,11 +93,7 @@ export const Header = ({ user, onMenuClick }) => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.href = '/register';
-  };
+  const handleLogout = logout;
 
   const formatTime = (dateString) => {
     const date = new Date(dateString);

@@ -69,7 +69,7 @@ export const API_ENDPOINTS = {
  */
 export const APP_ROUTES = {
     HOME: '/',
-    LOGIN_PATIENT: '/login/patient',
+    LOGIN_PATIENT: '/auth/login/patient',
     LOGIN_DOCTOR: '/login/doctor',
     REGISTER_PATIENT: '/register/patient',
     REGISTER_DOCTOR: '/register/doctor',

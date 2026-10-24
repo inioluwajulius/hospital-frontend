@@ -61,7 +61,13 @@ const MedicalRecords = ({ showNotification } = {}) => {
           api.getPatients()
         ]);
         setRecords(recordsData?.data?.data || recordsData?.data || []);
-        setPatients(patientsData?.data?.data || patientsData?.data || []);
+        const patientList = patientsData?.data?.data || patientsData?.data || [];
+        // Patients API returns Patient docs with the account in userId
+        setPatients(Array.isArray(patientList) ? patientList.map(p => ({
+          ...p,
+          id: p._id,
+          name: p.userId?.name || p.name || p.patientCardNumber,
+        })) : []);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
