@@ -179,12 +179,18 @@ const Register = () => {
             }
 
             // Debug log removed
-            await registerUser(payload);
-            
-            // Redirect after successful registration
+            const result = await registerUser(payload);
+            const loginRole = userType === 'patient' ? 'patient' : 'doctor';
+
+            // Redirect after successful registration: verify the email first when required
             setTimeout(() => {
-                window.location.href = userType === 'patient' ? '/auth/login/patient' : '/auth/login/doctor';
-            }, 2000);
+                if (result?.requiresEmailVerification) {
+                    const query = new URLSearchParams({ email: result.email || payload.email, role: loginRole });
+                    window.location.href = `/auth/verify-email?${query}`;
+                } else {
+                    window.location.href = `/auth/login/${loginRole}`;
+                }
+            }, 1500);
         } catch (err) {
             console.error('Registration error:', err);
         }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { LogIn, Mail, Lock, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { loginUser } from '../../services/api';
 import BrandLogo from '../../component/BrandLogo';
 import { cn } from '../../lib/utils';
@@ -9,6 +9,7 @@ import { STAFF_ROLES } from '../staff/staffUtils';
 
 const Login = () => {
   const { role } = useParams();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -66,6 +67,9 @@ const Login = () => {
     } catch (err) {
       if (err?.response?.status === 300 && err?.response?.data?.workspaces) {
         setWorkspaces(err.response.data.workspaces);
+      } else if (err?.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+        const query = new URLSearchParams({ email: err.response.data.email || formData.email, role: isPatient ? 'patient' : 'doctor', send: '1' });
+        navigate(`/auth/verify-email?${query}`);
       } else {
         setError(err?.response?.data?.message || 'Authentication failed. Please check your credentials.');
       }
@@ -81,6 +85,11 @@ const Login = () => {
       const response = await loginUser({ ...formData, hospitalId });
       handleLoginSuccess(response);
     } catch (err) {
+      if (err?.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+        const query = new URLSearchParams({ email: err.response.data.email || formData.email, role: isPatient ? 'patient' : 'doctor', send: '1' });
+        navigate(`/auth/verify-email?${query}`);
+        return;
+      }
       setError(err?.response?.data?.message || 'Authentication failed for selected workspace.');
     } finally {
       setIsLoading(false);
@@ -223,7 +232,7 @@ const Login = () => {
 
           <div className='flex justify-end'>
             <a 
-              href='/auth/forgot-password' 
+              href={`/auth/forgot-password?role=${isDoctor ? 'doctor' : 'patient'}`}  
               className='text-xs text-slate-500 hover:text-primary font-semibold transition-colors'
             >
               Forgot your password?

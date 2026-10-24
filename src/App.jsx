@@ -13,6 +13,7 @@ import RegistrationSelector from "./pages/RegistrationSelector";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail";
+import VerifyEmailCode from "./pages/auth/VerifyEmailCode";
 import AcceptInvite from "./pages/auth/AcceptInvite";
 
 // Admin Pages
@@ -82,6 +83,7 @@ function App() {
           <Route path="/auth/admin-setup" element={<AdminSetup />} />
           <Route path="/auth/forgot-password" element={<ForgotPassword />} />
           <Route path="/auth/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/auth/verify-email" element={<VerifyEmailCode />} />
           <Route path="/auth/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/auth/accept-invite/:token" element={<AcceptInvite />} />
           

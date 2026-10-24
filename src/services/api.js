@@ -80,6 +80,11 @@ export const loginUser = (data) => API.post("/auth/login", data);
 export const verifyEmail = (token) => API.get(`/auth/verify-email/${token}`);
 export const forgotPassword = (data) => API.post("/auth/forgot-password", data);
 export const resetPassword = (token, data) => API.post(`/auth/reset-password/${token}`, data);
+// Code-based email verification and password reset
+export const verifyEmailCode = (data) => API.post("/auth/verify-email", data);
+export const resendVerificationCode = (data) => API.post("/auth/resend-verification-code", data);
+export const verifyResetCode = (data) => API.post("/auth/verify-reset-code", data);
+export const resetPasswordWithCode = (data) => API.post("/auth/reset-password", data);
 export const createPatient = (data) => API.post("/patients", data);
 export const createDoctor = (data) => API.post("/doctors", data);
 
@@ -185,6 +190,10 @@ export const api = {
     verifyEmail,
     forgotPassword,
     resetPassword,
+    verifyEmailCode,
+    resendVerificationCode,
+    verifyResetCode,
+    resetPasswordWithCode,
     // UPDATE methods
     updatePatient,
     updatePatientProfile,
