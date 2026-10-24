@@ -27,14 +27,21 @@ export const TenantProvider = ({ children }) => {
           setTenant(tenantData);
           
           // Apply dynamic CSS variables for white-labeling
+          // The CSS uses rgb(var(--color-primary)), so the variable must be an "r g b"
+          // triplet. Hospitals store hex colours: convert them, and ignore anything
+          // else (an invalid value made every primary button transparent).
           if (tenantData.branding) {
             const root = document.documentElement;
-            if (tenantData.branding.primaryColor) {
-              root.style.setProperty('--color-primary', tenantData.branding.primaryColor);
-            }
-            if (tenantData.branding.secondaryColor) {
-              root.style.setProperty('--color-secondary', tenantData.branding.secondaryColor);
-            }
+            const toRgbTriplet = (value) => {
+              const hex = String(value || '').trim().replace(/^#/, '');
+              const full = /^[0-9a-f]{3}$/i.test(hex) ? hex.split('').map((c) => c + c).join('') : hex;
+              if (/^[0-9a-f]{6}$/i.test(full)) return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16)).join(' ');
+              return /^\d{1,3} \d{1,3} \d{1,3}$/.test(String(value).trim()) ? String(value).trim() : null;
+            };
+            const primary = toRgbTriplet(tenantData.branding.primaryColor);
+            const secondary = toRgbTriplet(tenantData.branding.secondaryColor);
+            if (primary) root.style.setProperty('--color-primary', primary);
+            if (secondary) root.style.setProperty('--color-secondary', secondary);
           }
         } else {
           // Fallback to default if no tenant found

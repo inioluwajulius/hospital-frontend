@@ -1,14 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
-  Video, Phone, PhoneOff, PhoneIncoming, Mic, MicOff, VideoOff, Send, Loader2, Wifi, WifiOff,
-  User, ArrowLeft, CheckCircle2, ClipboardList, AlertCircle, RotateCw, Signal,
+  Video, Phone, PhoneOff, Mic, MicOff, VideoOff, Send, Loader2, Wifi, WifiOff,
+  User, ArrowLeft, CheckCircle2, ClipboardList, AlertCircle, RotateCw, Signal, BellRing,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../../services/api';
 import { initSocket } from '../../services/socket';
 import { cn } from '../../lib/utils';
 import { useConsultationCall, DATA_PER_MINUTE } from '../../hooks/useConsultationCall';
+import { useCallStore, takeAcceptedCall, canAskForCallAlerts, askForCallAlerts, dismissCallAlerts } from '../../services/callStore';
 import { Field, TextArea, LoadingBlock } from '../staff/StaffUI';
 import { formatDateTime, errorText } from '../staff/staffUtils';
 
@@ -47,8 +48,11 @@ const ConsultationRoom = () => {
   const [peerPresent, setPeerPresent] = useState(false);
   const [online, setOnline] = useState(typeof navigator === 'undefined' ? true : navigator.onLine);
   const [iceServers, setIceServers] = useState([{ urls: 'stun:stun.l.google.com:19302' }]);
+  const [relayAvailable, setRelayAvailable] = useState(true);
   const [busy, setBusy] = useState('');
   const [notes, setNotes] = useState({ diagnosis: '', treatment: '', notes: '' });
+  const [askAlerts, setAskAlerts] = useState(canAskForCallAlerts);
+  const { accepted } = useCallStore();
   const chatEndRef = useRef(null);
 
   const participant = data?.participant;
@@ -86,7 +90,10 @@ const ConsultationRoom = () => {
   useEffect(() => { load(); }, [load]);
 
   useEffect(() => {
-    api.getIceServers().then((res) => setIceServers(res.data.data.iceServers)).catch(() => {});
+    api.getIceServers().then((res) => {
+      setIceServers(res.data.data.iceServers);
+      setRelayAvailable(res.data.data.relay !== false);
+    }).catch(() => {});
   }, []);
 
   // Online/offline indicator (rural connectivity drops are expected)
@@ -132,25 +139,37 @@ const ConsultationRoom = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Boolean(data), id, mergeMessages]);
 
+  // The socket is passed even while reconnecting: Socket.IO buffers signals and the room is
+  // re-joined on reconnect, and the media itself flows directly between the two devices.
+  // Incoming calls are answered in the app-wide popup (component/IncomingCallPopup.jsx).
   const call = useConsultationCall({
-    socket: joined ? socket : null,
+    socket,
     appointmentId: id,
-    participant,
+    otherName: otherName || 'The other participant',
     iceServers,
-    onEvent: (event, mode) => {
-      if (event === 'incoming') toast(`Incoming ${mode === 'video' ? 'video' : 'audio'} call`, { icon: '📞' });
+    relayAvailable,
+    onEvent: (event) => {
       if (event === 'ended') toast('The call ended');
       if (event === 'declined') toast('The call was declined');
     },
   });
 
-  // Peer leaving ends the call
+  // A call answered in the popup: connect it once we're in the room
+  const { joinAcceptedCall } = call;
+  useEffect(() => {
+    if (!joined || accepted?.appointmentId !== id) return;
+    const taken = takeAcceptedCall(id);
+    if (taken) joinAcceptedCall(taken);
+  }, [joined, accepted, id, joinAcceptedCall]);
+
+  // Peer leaving ends the call (after a grace period, see peerLeft)
+  const { peerLeft } = call;
   useEffect(() => {
     if (!socket) return undefined;
-    const onPeerLeft = () => { setPeerPresent(false); call.peerLeft(); };
+    const onPeerLeft = () => { setPeerPresent(false); peerLeft(); };
     socket.on('consult:peer-left', onPeerLeft);
     return () => socket.off('consult:peer-left', onPeerLeft);
-  }, [socket, call]);
+  }, [socket, peerLeft]);
 
   // Polling fallback keeps chat working when the live connection is down
   useEffect(() => {
@@ -244,7 +263,10 @@ const ConsultationRoom = () => {
   if (!data) return <LoadingBlock text="Opening consultation room..." />;
 
   const callActive = call.callState !== 'idle';
-  const canCall = joined && peerPresent && !ended && status === 'in-progress';
+  const showRemoteVideo = callActive && call.callMode === 'video' && call.remoteVideo;
+  const showLocalVideo = callActive && call.callMode === 'video' && !call.cameraOff;
+  // The other person doesn't need to be on this page: the call rings wherever they are in the app
+  const canCall = joined && !ended && status === 'in-progress';
   const ConnIcon = connection.icon;
 
   return (
@@ -270,11 +292,24 @@ const ConsultationRoom = () => {
         {/* Call + chat */}
         <div className="col-span-12 lg:col-span-8 space-y-6">
           <section className="bg-slate-900 rounded-3xl overflow-hidden relative min-h-[300px] flex flex-col">
-            {/* Remote media (also plays audio-only calls) */}
-            <video ref={call.remoteMediaRef} autoPlay playsInline className={cn('w-full flex-1 object-cover bg-slate-900', (!callActive || call.callMode !== 'video') && 'hidden')} />
-            <video ref={call.localVideoRef} autoPlay playsInline muted className={cn('absolute top-4 right-4 w-28 sm:w-36 rounded-xl border-2 border-white/20 shadow-lg bg-slate-800', (!callActive || call.callMode !== 'video' || call.cameraOff) && 'hidden')} />
+            {/* Remote media. Always mounted (only visually hidden) so audio keeps playing */}
+            <video ref={call.remoteMediaRef} autoPlay playsInline data-testid="remote-media"
+              className={cn('bg-slate-900', showRemoteVideo ? 'w-full flex-1 object-cover max-h-[70vh]' : 'absolute w-px h-px opacity-0 pointer-events-none')} />
+            <video ref={call.localVideoRef} autoPlay playsInline muted data-testid="local-media"
+              className={cn('absolute top-4 right-4 w-28 sm:w-36 rounded-xl border-2 border-white/20 shadow-lg bg-slate-800 z-10', !showLocalVideo && 'hidden')} />
 
-            {(!callActive || call.callMode !== 'video') && (
+            {call.reconnecting && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-2" role="status">
+                <Loader2 size={14} className="animate-spin" /> Reconnecting...
+              </div>
+            )}
+            {call.playbackBlocked && (
+              <button type="button" onClick={call.resumePlayback} className="absolute inset-x-0 mx-auto top-1/3 z-20 w-max bg-white text-slate-900 font-bold text-sm px-5 py-3 rounded-2xl shadow-lg">
+                Tap to turn on sound and video
+              </button>
+            )}
+
+            {!showRemoteVideo && (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-white">
                 <div className={cn('w-20 h-20 rounded-full bg-white/10 flex items-center justify-center mb-4', call.callState === 'in-call' && 'ring-4 ring-emerald-400/40 animate-pulse')}>
                   <User size={36} className="text-white/80" />
@@ -282,38 +317,24 @@ const ConsultationRoom = () => {
                 <p className="text-lg font-bold text-white">{otherName}</p>
                 <p className="text-sm text-white/60 mt-1">
                   {ended ? 'This consultation has ended.'
+                    : call.callState === 'in-call' && call.callMode === 'video' ? <>Camera off or audio only · <CallTimer since={call.connectedAt} /></>
                     : call.callState === 'in-call' ? <>Audio call · <CallTimer since={call.connectedAt} /></>
-                    : call.callState === 'calling' ? 'Calling...'
+                    : call.callState === 'calling' ? `Ringing ${otherName}...`
                     : call.callState === 'connecting' ? 'Connecting...'
-                    : call.callState === 'incoming' ? `Incoming ${call.incomingMode} call`
                     : status === 'scheduled' ? (participant === 'doctor' ? 'Start the consultation to begin the call.' : `Waiting for ${otherName} to start the consultation. You can send a message meanwhile.`)
-                    : !peerPresent ? `Waiting for ${otherName} to join...`
+                    : !peerPresent ? `Ready to call. It will ring for ${otherName} on any page of the app.`
                     : 'Ready to call'}
                 </p>
               </div>
             )}
 
-            {call.callState === 'in-call' && call.callMode === 'video' && (
+            {call.callState === 'in-call' && showRemoteVideo && (
               <div className="absolute top-4 left-4 bg-black/50 text-white text-xs font-bold px-3 py-1.5 rounded-full"><CallTimer since={call.connectedAt} /></div>
             )}
 
             {/* Controls */}
             <div className="p-4 bg-slate-950/60 flex flex-wrap items-center justify-center gap-3">
-              {call.callState === 'incoming' ? (
-                <>
-                  <button onClick={() => call.answerCall()} className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-3 rounded-2xl font-bold text-sm">
-                    <PhoneIncoming size={18} /> Answer {call.incomingMode === 'video' ? 'with video' : ''}
-                  </button>
-                  {call.incomingMode === 'video' && (
-                    <button onClick={() => call.answerCall('audio')} className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-5 py-3 rounded-2xl font-bold text-sm">
-                      <Phone size={18} /> Audio only (save data)
-                    </button>
-                  )}
-                  <button onClick={call.declineCall} className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-2xl font-bold text-sm">
-                    <PhoneOff size={18} /> Decline
-                  </button>
-                </>
-              ) : callActive ? (
+              {callActive ? (
                 <>
                   <button onClick={call.toggleMute} aria-pressed={call.muted} className={cn('p-3 rounded-2xl text-white', call.muted ? 'bg-red-500' : 'bg-white/10 hover:bg-white/20')} aria-label={call.muted ? 'Unmute' : 'Mute'}>
                     {call.muted ? <MicOff size={20} /> : <Mic size={20} />}
@@ -323,7 +344,9 @@ const ConsultationRoom = () => {
                       {call.cameraOff ? <VideoOff size={20} /> : <Video size={20} />}
                     </button>
                   )}
-                  <button onClick={call.hangUp} className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-2xl font-bold text-sm">
+                  {/* The call buttons turn into these controls at once: ignore the second click of a
+                      double-click on "Video call", which would otherwise land here and cancel the call */}
+                  <button onClick={(e) => { if (e.detail < 2) call.hangUp(); }} className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-5 py-3 rounded-2xl font-bold text-sm">
                     <PhoneOff size={18} /> End call
                   </button>
                 </>
@@ -342,6 +365,21 @@ const ConsultationRoom = () => {
               Data saver: audio uses about {DATA_PER_MINUTE.audio} MB/min, low-resolution video about {DATA_PER_MINUTE.video} MB/min. Chat works even on 2G.
             </p>
           </section>
+
+          {askAlerts && (
+            <div className="flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-sm text-emerald-800 font-medium">
+              <BellRing size={18} className="shrink-0" />
+              <span className="flex-1 min-w-[12rem]">Get a notification for incoming calls when this tab is in the background.</span>
+              <button type="button" onClick={() => { askForCallAlerts(); setAskAlerts(false); }} className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold">Turn on</button>
+              <button type="button" onClick={() => { dismissCallAlerts(); setAskAlerts(false); }} className="px-3 py-1.5 rounded-xl font-bold text-emerald-800 hover:bg-emerald-100">Not now</button>
+            </div>
+          )}
+
+          {call.notice && callActive && (
+            <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-sm text-amber-800 font-medium" role="status">
+              <AlertCircle size={18} className="shrink-0 mt-0.5" /> {call.notice}
+            </div>
+          )}
 
           {call.error && (
             <div className="flex items-start gap-3 p-4 rounded-2xl bg-red-50 border border-red-200 text-sm text-red-700 font-medium" role="alert">

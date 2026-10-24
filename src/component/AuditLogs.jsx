@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import toast from 'react-hot-toast';
+import { api, API } from '../services/api';
 import { 
   Shield, 
   Search, 
@@ -48,12 +49,20 @@ export const AuditLogs = ({ showNotification }) => {
     fetchLogs();
   }, []);
 
-  const handleExport = () => {
-    if (showNotification) {
-      showNotification('Exporting system audit logs...', 'info');
-      setTimeout(() => {
-        showNotification('Logs exported successfully!', 'success');
-      }, 2000);
+  // Downloads the CSV from the server (scoped to the admin's hospital by the backend)
+  const handleExport = async () => {
+    try {
+      const response = await API.get('/audit-logs/export/csv', { responseType: 'blob' });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showNotification?.('Logs exported successfully!', 'success');
+    } catch (error) {
+      console.error('Failed to export audit logs:', error);
+      toast.error('Could not export the audit logs. Please try again.');
     }
   };
 

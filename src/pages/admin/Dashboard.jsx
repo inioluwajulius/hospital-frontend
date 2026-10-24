@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Users, User, Clock, Activity, Building, ArrowUpRight, TrendingUp, TrendingDown, Stethoscope, BriefcaseMedical } from 'lucide-react';
 import { api } from '../../services/api';
 import { motion } from 'framer-motion';
@@ -41,7 +41,38 @@ const AdminDashboard = () => {
     activeAppointments: 0
   });
   const [loading, setLoading] = useState(true);
-  const [activityData, setActivityData] = useState([]);
+  const [activitySource, setActivitySource] = useState({ appointments: [], patients: [] });
+  const [activityRange, setActivityRange] = useState('7d');
+
+  // Appointments and new patients per day (7 or 30 days) or per month (this year)
+  const activityData = useMemo(() => {
+    const { appointments, patients } = activitySource;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let buckets;
+    if (activityRange === 'year') {
+      buckets = Array.from({ length: today.getMonth() + 1 }, (_, m) => ({
+        name: new Date(today.getFullYear(), m, 1).toLocaleDateString([], { month: 'short' }),
+        match: (d) => d.getFullYear() === today.getFullYear() && d.getMonth() === m,
+      }));
+    } else {
+      const count = activityRange === '30d' ? 30 : 7;
+      buckets = Array.from({ length: count }, (_, i) => {
+        const day = new Date(today);
+        day.setDate(day.getDate() - (count - 1 - i));
+        return {
+          name: count === 7 ? day.toLocaleDateString([], { weekday: 'short' }) : day.toLocaleDateString([], { day: 'numeric', month: 'short' }),
+          match: (d) => d.toDateString() === day.toDateString(),
+        };
+      });
+    }
+    const countIn = (list, field, match) => list.filter((x) => x[field] && match(new Date(x[field]))).length;
+    return buckets.map(({ name, match }) => ({
+      name,
+      appointments: countIn(appointments, 'appointmentDate', match),
+      newPatients: countIn(patients, 'createdAt', match),
+    }));
+  }, [activitySource, activityRange]);
   const [departmentData, setDepartmentData] = useState([]);
 
   useEffect(() => {
@@ -72,19 +103,8 @@ const AdminDashboard = () => {
           activeAppointments: appointments.filter(a => ['scheduled', 'in-progress'].includes(String(a.status || 'scheduled').toLowerCase())).length
         });
 
-        // Last 7 days: appointments per day and patients registered per day
-        const days = Array.from({ length: 7 }, (_, i) => {
-          const d = new Date();
-          d.setHours(0, 0, 0, 0);
-          d.setDate(d.getDate() - (6 - i));
-          return d;
-        });
-        const sameDay = (value, day) => value && new Date(value).toDateString() === day.toDateString();
-        setActivityData(days.map(day => ({
-          name: day.toLocaleDateString([], { weekday: 'short' }),
-          appointments: appointments.filter(a => sameDay(a.appointmentDate, day)).length,
-          newPatients: patients.filter(p => sameDay(p.createdAt, day)).length,
-        })));
+        // Raw data for the activity chart; the series is derived from the selected range
+        setActivitySource({ appointments, patients });
 
         // Doctors per department (falls back to specialization)
         const byDepartment = {};
@@ -102,6 +122,32 @@ const AdminDashboard = () => {
 
     fetchDashboardData();
   }, []);
+
+  // CSV snapshot of the figures shown on this dashboard (all from the live data above)
+  const downloadReport = () => {
+    const rows = [
+      ['Hospital report', new Date().toLocaleString()],
+      [],
+      ['Metric', 'Value'],
+      ['Doctors', stats.totalDoctors],
+      ['Patients', stats.totalPatients],
+      ['Applications awaiting approval', stats.pendingApprovals],
+      ['Scheduled / in-progress appointments', stats.activeAppointments],
+      [],
+      ['Day', 'Appointments', 'New patients'],
+      ...activityData.map((d) => [d.name, d.appointments, d.newPatients]),
+      [],
+      ['Department', 'Doctors'],
+      ...departmentData.map((d) => [d.name, d.doctors]),
+    ];
+    const csv = rows.map((r) => r.map((v) => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `hospital-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (loading) {
     return (
@@ -140,7 +186,7 @@ const AdminDashboard = () => {
           <p className="text-slate-500 font-medium">Overview of your hospital's performance, staff, and activity.</p>
         </div>
         <div className="flex gap-3 w-full md:w-auto">
-          <button className="flex-1 md:flex-none flex justify-center items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-2xl text-sm hover:bg-slate-50 transition-all shadow-sm active:scale-95">
+          <button type="button" onClick={downloadReport} className="flex-1 md:flex-none flex justify-center items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-2xl text-sm hover:bg-slate-50 transition-all shadow-sm active:scale-95">
             Download Report
           </button>
         </div>
@@ -195,12 +241,17 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h2 className="text-xl font-extrabold text-slate-900">Hospital Activity</h2>
-              <p className="text-sm text-slate-500 font-medium mt-1">Appointments & New Patients over the last 7 days</p>
+              <p className="text-sm text-slate-500 font-medium mt-1">Appointments & New Patients {activityRange === 'year' ? 'per month this year' : `over the last ${activityRange === '30d' ? 30 : 7} days`}</p>
             </div>
-            <select className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary block px-4 py-2 outline-none transition-all">
-              <option>Last 7 days</option>
-              <option>Last 30 days</option>
-              <option>This Year</option>
+            <select
+              aria-label="Activity range"
+              value={activityRange}
+              onChange={(e) => setActivityRange(e.target.value)}
+              className="bg-slate-50 border border-slate-200 text-slate-700 text-sm font-bold rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary block px-4 py-2 outline-none transition-all"
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="year">This Year</option>
             </select>
           </div>
           
@@ -241,7 +292,7 @@ const AdminDashboard = () => {
           >
             <h2 className="text-xl font-extrabold text-slate-900 mb-6">Quick Actions</h2>
             <div className="space-y-4">
-              <a href="/admin/register-doctor" className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 transition-all group bg-slate-50/50 hover:bg-white">
+              <a href="/admin/doctors?add=1" className="flex items-center justify-between p-4 rounded-2xl border border-slate-100 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 transition-all group bg-slate-50/50 hover:bg-white">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-emerald-100 rounded-xl text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                     <Stethoscope size={20} />

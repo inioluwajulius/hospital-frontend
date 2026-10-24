@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { UserPlus, Loader2, Users, Stethoscope, CheckCircle2 } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { useParams, Link } from 'react-router-dom';
@@ -107,27 +107,36 @@ const Register = () => {
         return isPasswordStrong(form.formData.password);
     }, [form.formData.password]);
 
-    // Determine if form can be submitted
-    const canSubmit = useMemo(() => {
-        const hasValidName = form.formData.name.trim().length >= 2;
-        const emailValidation = validateEmailForUserType(form.formData.email, userType);
-        const hasValidEmail = emailValidation.isValid;
-        const hasPassword = form.formData.password && passwordIsStrong;
-
-        if (userType === 'patient') {
-            if (selectedPatient) {
-                return hasValidName && hasValidEmail && hasPassword;
+    // Fields still missing or invalid, listed for the user when they press Create Account
+    const missingFields = useMemo(() => {
+        const f = form.formData;
+        const missing = [];
+        if (!selectedPatient && !f.hospitalId) missing.push(['hospitalId', 'hospital']);
+        if (f.name.trim().length < 2) missing.push(['name', 'full name']);
+        if (!validateEmailForUserType(f.email, userType).isValid) missing.push(['email', 'a valid email address']);
+        if (!passwordIsStrong) missing.push(['password', 'a strong password (8+ characters with upper and lower case letters, a number and a symbol)']);
+        if (userType === 'staff') {
+            if (!f.role) missing.push(['role', 'your role']);
+            if (f.role === 'DOCTOR') {
+                if (!f.specialization.trim()) missing.push(['specialization', 'specialization']);
+                if (!f.licenseNumber.trim()) missing.push(['licenseNumber', 'license number']);
+                if (f.yearsOfExperience === '' || Number(f.yearsOfExperience) < 0) missing.push(['yearsOfExperience', 'years of experience']);
             }
-            return hasValidName && hasValidEmail && hasPassword && form.formData.phone && form.formData.age && form.formData.gender && form.formData.hospitalId;
-        } else if (userType === 'staff') {
-            if (form.formData.role === 'DOCTOR') {
-                return hasValidName && hasValidEmail && hasPassword && form.formData.role && form.formData.hospitalId && form.formData.specialization && form.formData.licenseNumber && form.formData.yearsOfExperience;
-            }
-            return hasValidName && hasValidEmail && hasPassword && form.formData.role && form.formData.hospitalId;
+        } else if (userType === 'patient' && !selectedPatient) {
+            if (!f.phone) missing.push(['phone', 'phone number']);
+            if (!f.age) missing.push(['age', 'age']);
+            if (!f.gender) missing.push(['gender', 'gender']);
         }
-
-        return false;
+        return missing;
     }, [form.formData, userType, passwordIsStrong, selectedPatient]);
+    const canSubmit = missingFields.length === 0;
+
+    // Errors are shown at the top of a long form, so bring them into view
+    const messagesRef = useRef(null);
+    const [submitted, setSubmitted] = useState(null);
+    useEffect(() => {
+        if (authError) messagesRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+    }, [authError]);
 
     const canSearch = searchCard.trim() && searchPhone.trim() && searchHospitalId;
 
@@ -166,9 +175,11 @@ const Register = () => {
     // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isSubmitting) return;
 
-        if (!passwordIsStrong) {
-            setError('Please use a stronger password that satisfies all requirements.');
+        if (!canSubmit) {
+            missingFields.forEach(([field]) => form.setFieldTouched(field, true));
+            setError(`Please complete: ${missingFields.map(([, label]) => label).join(', ')}.`);
             return;
         }
 
@@ -205,15 +216,16 @@ const Register = () => {
             const result = await registerUser(payload);
             const loginRole = userType === 'patient' ? 'patient' : 'doctor';
 
-            // Redirect after successful registration: verify the email first when required
-            setTimeout(() => {
-                if (result?.requiresEmailVerification) {
-                    const query = new URLSearchParams({ email: result.email || payload.email, role: loginRole });
-                    window.location.href = `/auth/verify-email?${query}`;
-                } else {
-                    window.location.href = `/auth/login/${loginRole}`;
-                }
-            }, 1500);
+            // Verify the email first when required
+            if (result?.requiresEmailVerification) {
+                const query = new URLSearchParams({ email: result.email || payload.email, role: loginRole });
+                setTimeout(() => { window.location.href = `/auth/verify-email?${query}`; }, 1500);
+            } else if (userType === 'staff') {
+                // Staff can't log in until approved: say so instead of sending them to a login that refuses them
+                setSubmitted({ hospital: hospitals.find((h) => h.id === payload.hospitalId)?.name });
+            } else {
+                setTimeout(() => { window.location.href = `/auth/login/${loginRole}`; }, 1500);
+            }
         } catch (err) {
             console.error('Registration error:', err);
         }
@@ -458,7 +470,17 @@ const Register = () => {
                         )}
 
                         {/* Main Registration Form */}
-                        {userType === 'staff' || (userType === 'patient' && (patientChoice === 'new' || selectedPatient)) || type ? (
+                        {submitted ? (
+                            <div className="text-center space-y-4 p-6 bg-emerald-50 border border-emerald-100 rounded-2xl" role="status">
+                                <CheckCircle2 size={40} className="mx-auto text-emerald-600" />
+                                <h2 className="text-xl font-extrabold text-slate-900">Application sent</h2>
+                                <p className="text-sm text-slate-600">
+                                    Your account was created and sent to {submitted.hospital ? <strong>{submitted.hospital}</strong> : 'the hospital'} for approval.
+                                    You can log in once an administrator approves it, and we will email you when that happens.
+                                </p>
+                                <Link to="/auth/login/doctor" className="inline-block bg-primary text-white px-6 py-3 rounded-xl font-bold text-sm">Go to login</Link>
+                            </div>
+                        ) : userType === 'staff' || (userType === 'patient' && (patientChoice === 'new' || selectedPatient)) || type ? (
                             <form onSubmit={handleSubmit} className="space-y-6">
                                 {!type && (
                                     <Motion.button
@@ -471,6 +493,7 @@ const Register = () => {
                                 )}
 
                                 {/* Error and Success Messages */}
+                                <div ref={messagesRef} />
                                 <AnimatePresence>
                                     {(authError || form.errors.form) && (
                                         <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -690,16 +713,17 @@ const Register = () => {
                                 )}
 
                                 {/* Submit Button */}
+                                {/* Always clickable (except while sending): an incomplete form explains what is missing */}
                                 <Motion.button
                                     type="submit"
-                                    disabled={!canSubmit || isSubmitting}
+                                    disabled={isSubmitting}
                                     whileHover={{ scale: canSubmit ? 1.02 : 1 }}
-                                    whileTap={{ scale: canSubmit ? 0.98 : 1 }}
+                                    whileTap={{ scale: 0.98 }}
                                     className={cn(
-                                        'w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2',
+                                        'w-full py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 disabled:cursor-wait',
                                         canSubmit
                                             ? 'bg-primary text-white shadow-lg shadow-primary/30 hover:shadow-lg hover:shadow-primary/40'
-                                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                            : 'bg-primary/60 text-white'
                                     )}
                                 >
                                     {isSubmitting ? (

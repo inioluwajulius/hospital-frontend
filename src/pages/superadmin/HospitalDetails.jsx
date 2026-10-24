@@ -6,6 +6,7 @@ import { api } from '../../services/api';
 import { Panel, SearchInput, Select, StatusBadge, LoadingBlock, EmptyRow, Modal, SecondaryButton } from '../staff/StaffUI';
 import { ROLE_LABELS, errorText, formatDate, getCurrentUser } from '../staff/staffUtils';
 import UserAccountPanel from '../../component/users/UserAccountPanel';
+import ApplicationsPanel from '../../component/approvals/ApplicationsPanel';
 
 const TABS = [
   { key: '', label: 'All staff' },
@@ -154,6 +155,12 @@ const HospitalDetails = () => {
         <Stat icon={CalendarClock} label="Upcoming appts" value={stats?.upcomingAppointments} />
         <Stat icon={ShieldAlert} label="Unverified" value={stats?.unverified} />
       </div>
+
+      {/* Doctor/nurse applications for this hospital only */}
+      <section className="space-y-3">
+        <h2 className="text-lg font-extrabold text-slate-900">Staff applications</h2>
+        <ApplicationsPanel hospitalId={id} />
+      </section>
 
       {/* Users */}
       <Panel>

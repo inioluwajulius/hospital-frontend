@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   FileText, 
   Search, 
@@ -18,8 +19,15 @@ import {
 } from 'lucide-react';
 import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
+import { getCurrentUser } from '../staff/staffUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldCheck, Syringe } from 'lucide-react';
+
+// The signed-in doctor (the server also records the author from the login token)
+const myDoctorName = () => {
+  const name = getCurrentUser()?.name;
+  return name ? `Dr. ${String(name).replace(/^Dr\.?\s*/i, '')}` : 'the attending doctor';
+};
 
 const MedicalRecords = ({ showNotification } = {}) => {
   const [records, setRecords] = useState([]);
@@ -42,7 +50,7 @@ const MedicalRecords = ({ showNotification } = {}) => {
     treatment: '',
     findings: '',
     clinicalNotes: '',
-    doctorName: 'Dr. Michael Chen',
+    doctorName: myDoctorName(),
     signature: true,
     vitals: {
       bloodPressure: '',
@@ -77,6 +85,23 @@ const MedicalRecords = ({ showNotification } = {}) => {
 
     fetchData();
   }, []);
+
+  // Opened from the schedule (?patient=<id>&new=1&reason=...): show that patient and
+  // start a consultation note for them
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const patientId = searchParams.get('patient');
+    if (!patientId || loading) return;
+    const patient = patients.find((p) => p.id === patientId);
+    if (patient) {
+      setSelectedPatient(patientId);
+      if (searchParams.get('new') === '1') {
+        setFormData((prev) => ({ ...prev, patientId, patientName: patient.name, chiefComplaint: prev.chiefComplaint || searchParams.get('reason') || '' }));
+        setIsModalOpen(true);
+      }
+    }
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams, loading, patients]);
 
   useEffect(() => {
     if (selectedPatient && api.getPatient) {
@@ -140,7 +165,7 @@ const MedicalRecords = ({ showNotification } = {}) => {
           treatment: '',
           findings: '',
           clinicalNotes: '',
-          doctorName: 'Dr. Michael Chen',
+          doctorName: myDoctorName(),
           signature: true,
           vitals: { bloodPressure: '', heartRate: '', weight: '', height: '', temperature: '' }
         });

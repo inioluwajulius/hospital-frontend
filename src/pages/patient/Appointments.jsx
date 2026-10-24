@@ -17,7 +17,7 @@ import {
   AlignLeft,
   Video
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { formatAvailability } from '../../utils/availability';
 import { motion, AnimatePresence } from 'framer-motion';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, format, addMonths, subMonths, isToday } from 'date-fns';
@@ -170,6 +170,23 @@ const PatientAppointments = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Deep link from Telemedicine: ?book=telemedicine[&doctor=<id>] opens the booking form pre-filled
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const book = searchParams.get('book');
+    if (!book || loading) return;
+    const doctorId = searchParams.get('doctor') || '';
+    const doctorAvailable = !doctorId || doctors.some((d) => d._id === doctorId);
+    if (!doctorAvailable) toast.error('That doctor is not available for booking. Please choose another doctor.');
+    setNewAppointment((prev) => ({
+      ...prev,
+      mode: book === 'telemedicine' ? 'telemedicine' : 'in-person',
+      doctorId: doctorAvailable ? doctorId : '',
+    }));
+    setShowModal(true);
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams, loading, doctors]);
 
   const fetchData = async () => {
     try {

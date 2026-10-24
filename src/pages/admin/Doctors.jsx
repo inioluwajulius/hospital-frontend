@@ -17,7 +17,7 @@ import {
   Star,
   ChevronRight
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,7 +32,9 @@ const Doctors = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('All');
   
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // /admin/doctors?add=1 (the dashboard's Register Doctor link) opens the invite form
+  const [searchParams] = useSearchParams();
+  const [isModalOpen, setIsModalOpen] = useState(() => searchParams.get('add') === '1');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   
@@ -75,15 +77,30 @@ const Doctors = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Adding a doctor sends them an invitation: they set their own password and their
+  // account becomes active when they accept (no admin-chosen passwords).
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email) return;
+    if (isSubmitting) return;
+    if (!formData.name.trim() || !formData.email.trim()) {
+      toast.error('Enter the doctor\'s full name and email address.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      await api.createDoctor?.(formData);
+      await api.inviteStaff({
+        name: formData.name.trim(),
+        email: formData.email.trim().toLowerCase(),
+        role: 'doctor',
+        phone: formData.phone,
+        specialization: formData.specialization,
+        department: formData.department,
+        licenseNumber: formData.licenseNumber,
+        yearsOfExperience: formData.experience,
+      });
       setSuccess(true);
-      toast.success('Doctor profile created successfully!');
+      toast.success(`Invitation sent to ${formData.email.trim()}`);
 
       const updatedRes = await api.getDoctors?.();
       const responseData = updatedRes?.data;
@@ -105,8 +122,8 @@ const Doctors = () => {
         });
       }, 2000);
     } catch (error) {
-      console.error('Failed to create doctor profile:', error);
-      toast.error('Failed to create doctor profile.');
+      console.error('Failed to invite doctor:', error);
+      toast.error(error.response?.data?.error || error.response?.data?.message || 'Could not send the invitation. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -264,8 +281,8 @@ const Doctors = () => {
                     <CheckCircle2 size={48} />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-extrabold text-slate-900">Profile Created</h3>
-                    <p className="text-slate-500 mt-2 font-medium">Doctor profile has been added to the system.</p>
+                    <h3 className="text-2xl font-extrabold text-slate-900">Invitation Sent</h3>
+                    <p className="text-slate-500 mt-2 font-medium">The doctor will get an email to set their password. They appear in this directory once they accept, and you can follow the invitation on the Staff page.</p>
                   </div>
                 </div>
               ) : (
@@ -273,7 +290,7 @@ const Doctors = () => {
                   <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-white sticky top-0 z-20">
                     <div>
                       <h3 className="text-xl font-extrabold text-slate-900">Add Medical Staff</h3>
-                      <p className="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">Register new doctor or specialist</p>
+                      <p className="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">Invite a doctor to join this hospital</p>
                     </div>
                     <button 
                       onClick={() => setIsModalOpen(false)}
@@ -290,6 +307,7 @@ const Doctors = () => {
                         <input 
                           type="text"
                           name="name"
+                          required
                           value={formData.name}
                           onChange={handleInputChange}
                           placeholder="Dr. John Smith"
@@ -302,6 +320,7 @@ const Doctors = () => {
                         <input 
                           type="email"
                           name="email"
+                          required
                           value={formData.email}
                           onChange={handleInputChange}
                           placeholder="doctor@hospital.com"
@@ -373,19 +392,9 @@ const Doctors = () => {
                         />
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block">Availability</label>
-                        <select 
-                          name="availability"
-                          value={formData.availability}
-                          onChange={handleInputChange}
-                          className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-sm font-bold text-slate-700 transition-all outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm appearance-none"
-                        >
-                          <option value="Available">Available</option>
-                          <option value="On Leave">On Leave</option>
-                          <option value="Part-time">Part-time</option>
-                        </select>
-                      </div>
+                      <p className="text-xs text-slate-500 font-medium self-end">
+                        The doctor sets their own password from the invitation email, and their consulting hours from Telemedicine.
+                      </p>
                     </div>
 
                     <div className="pt-4 flex gap-3">
@@ -410,7 +419,7 @@ const Doctors = () => {
                         ) : (
                           <>
                             <Users size={20} />
-                            Add to Staff
+                            Send Invitation
                           </>
                         )}
                       </button>

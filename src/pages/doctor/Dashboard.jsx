@@ -22,6 +22,7 @@ import {
   ResponsiveContainer
 } from 'recharts';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { api } from '../../services/api';
 import toast from 'react-hot-toast';
@@ -93,8 +94,12 @@ const Dashboard = () => {
   const upcomingAppointments = useMemo(() => {
     return appointments
       .filter(a => {
-        const aptDate = new Date(a.appointmentDate);
-        return aptDate >= new Date() && a.status !== 'cancelled' && a.status !== 'Cancelled';
+        // Ongoing consultations, plus anything from today onwards that isn't finished
+        const status = String(a.status || 'scheduled').toLowerCase();
+        if (status === 'in-progress') return true;
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        return new Date(a.appointmentDate) >= startOfToday && status === 'scheduled';
       })
       .sort((a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate))
       .slice(0, 5);
@@ -313,8 +318,16 @@ const Dashboard = () => {
                 const dateObj = new Date(apt.appointmentDate);
                 const timeString = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 
+                // Video consultations open their room; other visits open in the schedule
+                const isVideo = apt.mode === 'telemedicine' && ['scheduled', 'in-progress'].includes(String(apt.status || 'scheduled').toLowerCase());
+                const target = isVideo ? `/consultation/${apt._id}` : `/doctor/appointments?appointment=${apt._id}`;
                 return (
-                  <div key={apt._id || i} className="group flex flex-col gap-3 p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-primary/20 hover:shadow-md transition-all">
+                  <Link
+                    key={apt._id || i}
+                    to={target}
+                    aria-label={isVideo ? `Open video consultation with ${patientName}` : `Open appointment with ${patientName}`}
+                    className="group flex flex-col gap-3 p-5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-primary/20 hover:shadow-md transition-all"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary font-bold shadow-sm border border-slate-100">
@@ -329,7 +342,10 @@ const Dashboard = () => {
                         {apt.status || 'Scheduled'}
                       </span>
                     </div>
-                  </div>
+                    <span className="text-xs font-bold text-primary group-hover:underline">
+                      {isVideo ? 'Open video consultation →' : 'Open appointment →'}
+                    </span>
+                  </Link>
                 );
               })
             ) : (

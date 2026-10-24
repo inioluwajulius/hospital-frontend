@@ -18,7 +18,6 @@ import AcceptInvite from "./pages/auth/AcceptInvite";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
-import DoctorRegister from "./pages/admin/DoctorRegister";
 import AdminDoctors from "./pages/admin/Doctors";
 import AdminPatients from "./pages/admin/Patients";
 import AdminPendingDoctors from "./pages/admin/PendingApprovals";
@@ -68,6 +67,7 @@ import { AuditLogs } from "./component/AuditLogs";
 import { Settings } from "./component/Settings";
 import { AdminSetup } from "./component/AdminSetup";
 import ProtectedRoute from "./component/ProtectedRoute";
+import IncomingCallPopup from "./component/IncomingCallPopup";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -76,6 +76,8 @@ function App() {
       <Toaster position="top-right" toastOptions={{ duration: 4000, style: { background: '#1e293b', color: '#fff' } }} />
       <BrowserRouter>
         <Analytics />
+        {/* Incoming calls ring on every page */}
+        <IncomingCallPopup />
         <Routes>
           {/* Root redirect */}
           <Route path="/" element={<Navigate to="/register" replace />} />
@@ -96,8 +98,8 @@ function App() {
           
           {/* ========== ADMIN ROUTES ========== */}
           <Route element={<DashboardLayout />}>
-            {/* Doctor Registration (by admin) */}
-            <Route path="/admin/register-doctor" element={<ProtectedRoute requiredRole="admin"><DoctorRegister /></ProtectedRoute>} />
+            {/* Admins add doctors by invitation from the Doctors page */}
+            <Route path="/admin/register-doctor" element={<Navigate to="/admin/doctors?add=1" replace />} />
             
             {/* Admin Management Pages */}
             <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />

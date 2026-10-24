@@ -23,7 +23,7 @@ import {
   Info,
   AlertCircle
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
 import { format, parse, addDays, startOfWeek, startOfMonth, endOfMonth, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
@@ -35,6 +35,11 @@ import { EmptyState } from '../../component/EmptyState';
 // Backend stores lowercase statuses; the UI shows title-case labels
 const STATUS_LABELS = { scheduled: 'Scheduled', 'in-progress': 'In-Progress', completed: 'Completed', cancelled: 'Cancelled' };
 const toStatusLabel = (status) => STATUS_LABELS[String(status || 'scheduled').toLowerCase()] || status;
+
+// Appointments arrive with patientId populated (an object); older code paths pass a plain id
+const idOf = (value) => String((value && typeof value === 'object' ? value._id || value.id : value) || '');
+// A video consultation the doctor can still hold
+const isOpenTelemedicine = (apt) => apt?.mode === 'telemedicine' && ['scheduled', 'in-progress'].includes(String(apt.status || 'scheduled').toLowerCase());
 
 const Appointments = () => {
   const [appointments, setAppointments] = useState([]);
@@ -194,9 +199,40 @@ const Appointments = () => {
       const dName = apt.doctorId?.name || 'Unassigned';
       const dateObj = new Date(apt.appointmentDate);
       const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      return { ...apt, status: toStatusLabel(apt.status), patientName: pName, doctorName: dName, time: timeStr, dateObj };
+      return { ...apt, status: toStatusLabel(apt.status), patientName: pName, patientRef: idOf(apt.patientId), doctorName: dName, time: timeStr, dateObj };
     }).sort((a, b) => a.dateObj - b.dateObj);
   }, [appointments]);
+
+  // Clicking a patient: a video consultation opens its room straight away; anything else
+  // opens the details panel, where an in-person consultation can be started
+  const navigate = useNavigate();
+  const openAppointment = (apt) => {
+    if (isOpenTelemedicine(apt)) navigate(`/consultation/${apt._id}`);
+    else setSelectedAppointment(apt);
+  };
+
+  // In-person consultation: check the patient in and open a consultation note for them
+  const startInPersonConsultation = async (apt) => {
+    if (apt.status === 'Scheduled' || !apt.status) await handleUpdateStatus(apt._id, 'In-Progress');
+    const params = new URLSearchParams({ patient: apt.patientRef, new: '1' });
+    if (apt.reason) params.set('reason', apt.reason);
+    navigate(`/doctor/medical-records?${params}`);
+  };
+
+  // Opened from the dashboard (?appointment=<id>): show that appointment
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const wanted = searchParams.get('appointment');
+    if (!wanted || loading) return;
+    const apt = processedAppointments.find((a) => String(a._id) === wanted);
+    if (apt) {
+      setSelectedDate(apt.dateObj);
+      setSelectedAppointment(apt);
+    } else {
+      toast.error('That appointment could not be found in your schedule.');
+    }
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams, loading, processedAppointments]);
 
   const filteredAppointments = useMemo(() => {
     return processedAppointments.filter(apt => {
@@ -480,11 +516,15 @@ const Appointments = () => {
                           const isEmergency = apt.type === 'Emergency';
                           return (
                             <div 
-                              key={apt.id || apt._id} 
-                              onClick={() => setSelectedAppointment(apt)}
+                              key={apt.id || apt._id}
+                              role="button"
+                              tabIndex={0}
+                              aria-label={isOpenTelemedicine(apt) ? `Open video consultation with ${apt.patientName}` : `Open appointment with ${apt.patientName}`}
+                              onClick={() => openAppointment(apt)}
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openAppointment(apt); } }}
                               className={cn(
                                 "p-6 hover:bg-slate-50 transition-all flex flex-col md:flex-row items-center gap-6 cursor-pointer group",
-                                selectedAppointment?.id === apt.id && "bg-slate-50",
+                                selectedAppointment && String(selectedAppointment._id) === String(apt._id) && "bg-slate-50",
                                 isEmergency && "hover:bg-red-50/50"
                               )}
                             >
@@ -854,13 +894,13 @@ const Appointments = () => {
                     <div>
                       <h4 className="text-xl font-extrabold text-slate-900">{selectedAppointment.patientName}</h4>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded-md">ID: {selectedAppointment.patientId?.slice(-6) || 'Unknown'}</span>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded-md">{selectedAppointment.patientId?.patientCardNumber || `ID: ${selectedAppointment.patientRef ? selectedAppointment.patientRef.slice(-6) : 'Unknown'}`}</span>
                       </div>
                     </div>
                   </div>
                   
                   {(() => {
-                    const patient = patients.find(p => p.id === selectedAppointment.patientId || p._id === selectedAppointment.patientId);
+                    const patient = patients.find(p => idOf(p) === selectedAppointment.patientRef);
                     if (!patient) return null;
                     return (
                       <div className="space-y-4 pt-2">
@@ -949,10 +989,10 @@ const Appointments = () => {
                   </h5>
                   <div className="space-y-3">
                     {(() => {
-                      const pastApts = processedAppointments.filter(a => 
-                        (a.patientId === selectedAppointment.patientId || a.patientId?._id === selectedAppointment.patientId?._id) && 
-                        a.id !== selectedAppointment.id && a.dateObj < new Date()
-                      ).slice(0, 3);
+                      const pastApts = processedAppointments.filter(a =>
+                        a.patientRef === selectedAppointment.patientRef &&
+                        String(a._id) !== String(selectedAppointment._id) && a.dateObj < new Date()
+                      ).reverse().slice(0, 3);
                       
                       if (pastApts.length === 0) return <div className="text-sm text-slate-500 text-center py-4 bg-slate-50 rounded-xl border border-slate-100 font-medium">No previous visits found.</div>;
                       
@@ -978,12 +1018,12 @@ const Appointments = () => {
                   </Link>
                 )}
 
-                {(!selectedAppointment.status || selectedAppointment.status === 'Scheduled') && (
-                  <button 
-                    onClick={() => handleUpdateStatus(selectedAppointment.id || selectedAppointment._id, 'In-Progress')}
+                {selectedAppointment.mode !== 'telemedicine' && ['Scheduled', 'In-Progress'].includes(selectedAppointment.status || 'Scheduled') && selectedAppointment.patientRef && (
+                  <button
+                    onClick={() => startInPersonConsultation(selectedAppointment)}
                     className="w-full py-4 bg-emerald-600 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-3">
-                    <CheckCircle2 size={20} />
-                    Check-In Patient
+                    <Stethoscope size={20} />
+                    {selectedAppointment.status === 'In-Progress' ? 'Continue consultation' : 'Start consultation'}
                   </button>
                 )}
 

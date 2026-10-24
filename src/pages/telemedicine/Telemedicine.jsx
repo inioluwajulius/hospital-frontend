@@ -135,14 +135,14 @@ const Telemedicine = () => {
           ? 'Your video consultations and consulting hours.'
           : 'See a doctor from wherever you are. Calls are audio-first to save data, and chat works on any connection.'}
         action={role === 'patient' && (
-          <Link to="/patient/appointments" className="bg-primary text-white px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-primary/20">
+          <Link to="/patient/appointments?book=telemedicine" className="bg-primary text-white px-6 py-3 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-primary/20">
             <Calendar size={18} /> Book a video consultation
           </Link>
         )}
       />
 
       {groups.live.length > 0 && <ConsultationList title="Live now" items={groups.live} role={role} empty="" />}
-      <ConsultationList title="Upcoming" items={groups.upcoming} role={role} empty={role === 'doctor' ? 'No upcoming video consultations.' : 'No upcoming video consultations. Book one from Appointments by choosing "Video consultation".'} />
+      <ConsultationList title="Upcoming" items={groups.upcoming} role={role} empty={role === 'doctor' ? 'No upcoming video consultations.' : 'No upcoming video consultations. Use "Book video consultation" next to a doctor below.'} />
 
       {role === 'doctor' && <AvailabilityEditor initial={myAvailability} />}
 
@@ -158,6 +158,13 @@ const Telemedicine = () => {
                     <p className="text-xs text-slate-500 font-medium">{d.specialization || 'General practice'}{d.yearsOfExperience ? ` · ${d.yearsOfExperience} yrs experience` : ''}</p>
                     <p className="text-xs text-slate-600 mt-1"><span className="font-bold">Hours:</span> {formatAvailability(d.availability, 'Any time during clinic hours')}</p>
                   </div>
+                  <Link
+                    to={`/patient/appointments?book=telemedicine&doctor=${d._id}`}
+                    aria-label={`Book a video consultation with ${doctorLabel(d.name)}`}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+                  >
+                    <Calendar size={16} /> Book video consultation
+                  </Link>
                 </div>
               ))}
             </div>

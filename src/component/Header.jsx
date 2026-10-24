@@ -10,7 +10,27 @@ export const Header = ({ user, onMenuClick }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  // Older notifications are loaded a page at a time (20 per page, newest first)
+  const [notificationPage, setNotificationPage] = useState(1);
+  const [hasOlderNotifications, setHasOlderNotifications] = useState(true);
+  const [loadingOlder, setLoadingOlder] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const loadOlderNotifications = async () => {
+    setLoadingOlder(true);
+    try {
+      const next = notificationPage + 1;
+      const response = await api.get(`/notifications?page=${next}&limit=20`);
+      const older = response.data?.data || [];
+      setNotifications((prev) => [...prev, ...older.filter((n) => !prev.some((p) => p._id === n._id))]);
+      setNotificationPage(next);
+      setHasOlderNotifications(older.length === 20);
+    } catch (error) {
+      console.error('Failed to load older notifications:', error);
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
   const notifRef = useRef(null);
   const userMenuRef = useRef(null);
   const navigate = useNavigate();
@@ -178,14 +198,18 @@ export const Header = ({ user, onMenuClick }) => {
                     ))
                   )}
                 </div>
-                <div className="p-3 border-t border-slate-50 text-center bg-slate-50/50">
-                  <button 
-                    onClick={() => alert("Notification history coming soon.")}
-                    className="text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors uppercase tracking-widest"
-                  >
-                    View All Notifications
-                  </button>
-                </div>
+                {notifications.length >= 20 && hasOlderNotifications && (
+                  <div className="p-3 border-t border-slate-50 text-center bg-slate-50/50">
+                    <button
+                      type="button"
+                      onClick={loadOlderNotifications}
+                      disabled={loadingOlder}
+                      className="text-xs font-bold text-slate-500 hover:text-emerald-600 transition-colors uppercase tracking-widest disabled:opacity-60"
+                    >
+                      {loadingOlder ? 'Loading...' : 'Load older notifications'}
+                    </button>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
