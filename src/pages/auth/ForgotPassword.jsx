@@ -198,7 +198,7 @@ const ForgotPassword = () => {
             <KeyRound size={28} />
           </div>
           <p className="text-sm text-slate-500 font-medium">
-            If <span className="font-bold text-slate-900 break-all">{email.trim()}</span> has an account, we've sent it a 6-digit code. It expires in 10 minutes.
+            If <span className="font-bold text-slate-900 break-all">{email.trim()}</span> has an account, we've sent it a 6-digit code. It expires in 10 minutes. If you received more than one, use the latest.
           </p>
         </div>
         {messages}

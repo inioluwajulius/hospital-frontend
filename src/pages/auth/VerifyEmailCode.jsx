@@ -10,6 +10,17 @@ import { useCountdown } from '../../hooks/useCountdown';
 
 const RESEND_SECONDS = 60;
 
+// "Check your connection" only when no response arrived. If the server answered but its
+// message can't be read, fall back to a message based on the status code.
+const describeError = (err, fallback) => {
+  if (!err?.response) return "We couldn't reach the server. Check your connection and try again.";
+  const message = err.response.data?.message;
+  if (typeof message === 'string' && message) return message;
+  if (err.response.status === 429) return 'Too many attempts. Please wait a few minutes and try again.';
+  if (err.response.status >= 500) return 'Something went wrong on our side. Please try again in a moment.';
+  return fallback;
+};
+
 /**
  * /auth/verify-email?email=...&role=patient|doctor[&send=1]
  * Enter the 6-digit code emailed at registration. `send=1` requests a fresh code on
@@ -42,7 +53,7 @@ const VerifyEmailCode = () => {
       startCooldown(res.data?.retryAfterSeconds || RESEND_SECONDS);
       setCode('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not send a new code. Please check your connection and try again.');
+      setError(describeError(err, 'Could not send a new code. Please try again.'));
     } finally {
       setResending(false);
     }
@@ -66,7 +77,7 @@ const VerifyEmailCode = () => {
       await api.verifyEmailCode({ email, code: value });
       setVerified(true);
     } catch (err) {
-      setError(err.response?.data?.message || 'Could not verify the code. Please check your connection and try again.');
+      setError(describeError(err, 'That code is incorrect or has expired. Use the code from the most recent email, or request a new one.'));
       setCode('');
     } finally {
       setSubmitting(false);
@@ -107,7 +118,7 @@ const VerifyEmailCode = () => {
             <MailCheck size={28} />
           </div>
           <p className="text-sm text-slate-500 font-medium">
-            We sent a 6-digit code to <span className="font-bold text-slate-900 break-all">{email}</span>. It expires in 10 minutes.
+            We sent a 6-digit code to <span className="font-bold text-slate-900 break-all">{email}</span>. It expires in 10 minutes. If you received more than one, use the latest.
           </p>
         </div>
       )}
