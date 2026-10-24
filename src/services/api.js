@@ -27,6 +27,10 @@ API.interceptors.request.use(
 API.interceptors.response.use(
     (response) => response,
     (error) => {
+        // A temporary password must be replaced before anything else
+        if (error.response?.status === 403 && error.response?.data?.code === 'PASSWORD_CHANGE_REQUIRED' && window.location.pathname !== '/account/change-password') {
+            window.location.href = '/account/change-password';
+        }
         if (error.response?.status === 401) {
             let role = '';
             try {
@@ -80,6 +84,11 @@ export const loginUser = (data) => API.post("/auth/login", data);
 export const verifyEmail = (token) => API.get(`/auth/verify-email/${token}`);
 export const forgotPassword = (data) => API.post("/auth/forgot-password", data);
 export const resetPassword = (token, data) => API.post(`/auth/reset-password/${token}`, data);
+// Code-based email verification and password reset
+export const verifyEmailCode = (data) => API.post("/auth/verify-email", data);
+export const resendVerificationCode = (data) => API.post("/auth/resend-verification-code", data);
+export const verifyResetCode = (data) => API.post("/auth/verify-reset-code", data);
+export const resetPasswordWithCode = (data) => API.post("/auth/reset-password", data);
 export const createPatient = (data) => API.post("/patients", data);
 export const createDoctor = (data) => API.post("/doctors", data);
 
@@ -113,6 +122,14 @@ export const getStaff = () => API.get("/hospital-admin/staff?limit=100");
 export const inviteStaff = (data) => API.post("/hospital-admin/staff/invite", data);
 export const resendInvitation = (userId) => API.post(`/hospital-admin/staff/${userId}/resend-invitation`);
 export const acceptInvitation = (token, data) => API.post(`/hospital-admin/invitations/${token}/accept`, data);
+// Telemedicine
+export const getConsultation = (id) => API.get(`/consultations/${id}`);
+export const getConsultationMessages = (id, after) => API.get(`/consultations/${id}/messages`, { params: after ? { after } : {} });
+export const sendConsultationMessage = (id, data) => API.post(`/consultations/${id}/messages`, data);
+export const startConsultation = (id) => API.post(`/consultations/${id}/start`);
+export const completeConsultation = (id, data) => API.post(`/consultations/${id}/complete`, data);
+export const getIceServers = () => API.get("/consultations/ice-servers");
+export const updateMyAvailability = (availability) => API.put("/doctors/me/availability", { availability });
 export const updatePrescription = (id, data) => API.put(`/prescriptions/${id}`, data);
 export const updateDrug = (id, data) => API.put(`/pharmacy/drugs/${id}`, data);
 export const updateRadiologyExam = (id, data) => API.put(`/radiology/${id}`, data);
@@ -140,6 +157,7 @@ export const api = {
     get: (url) => API.get(url),
     post: (url, data) => API.post(url, data),
     put: (url, data) => API.put(url, data),
+    patch: (url, data) => API.patch(url, data),
     delete: (url) => API.delete(url),
     
     // GET methods
@@ -185,6 +203,10 @@ export const api = {
     verifyEmail,
     forgotPassword,
     resetPassword,
+    verifyEmailCode,
+    resendVerificationCode,
+    verifyResetCode,
+    resetPasswordWithCode,
     // UPDATE methods
     updatePatient,
     updatePatientProfile,
@@ -199,6 +221,13 @@ export const api = {
     inviteStaff,
     resendInvitation,
     acceptInvitation,
+    getConsultation,
+    getConsultationMessages,
+    sendConsultationMessage,
+    startConsultation,
+    completeConsultation,
+    getIceServers,
+    updateMyAvailability,
     updateDoctor,
     updatePrescription,
     markNotificationAsRead,

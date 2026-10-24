@@ -45,20 +45,43 @@ const Register = () => {
     // Hospitals state
     const [hospitals, setHospitals] = useState([]);
     const [isLoadingHospitals, setIsLoadingHospitals] = useState(true);
+    const [hospitalsError, setHospitalsError] = useState('');
+
+    const fetchHospitals = async () => {
+        setIsLoadingHospitals(true);
+        setHospitalsError('');
+        try {
+            const response = await api.getHospitals();
+            setHospitals(Array.isArray(response.data?.data) ? response.data.data : []);
+        } catch (err) {
+            console.error('Failed to load hospitals', err);
+            setHospitalsError(err.response
+                ? 'We couldn\'t load the list of hospitals. Please try again.'
+                : 'We couldn\'t reach the server to load hospitals. Check your connection and try again.'
+                    // Local development: the usual cause is that only the frontend was started
+                    + (import.meta.env.DEV ? ' (Development: is the backend running? Start both with "npm run dev" from the project root.)' : ''));
+        } finally {
+            setIsLoadingHospitals(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchHospitals = async () => {
-            try {
-                const response = await api.getHospitals();
-                setHospitals(response.data.data);
-            } catch (err) {
-                console.error('Failed to load hospitals', err);
-            } finally {
-                setIsLoadingHospitals(false);
-            }
-        };
         fetchHospitals();
     }, []);
+
+    // Shown instead of an empty dropdown when hospitals can't be loaded
+    const hospitalsNotice = hospitalsError ? (
+        <div className="flex items-start justify-between gap-3 p-3 bg-red-50 rounded-xl border border-red-200">
+            <span className="text-sm text-red-700 font-medium">{hospitalsError}</span>
+            <button type="button" onClick={fetchHospitals} className="shrink-0 text-sm font-bold text-red-700 hover:underline">
+                Try again
+            </button>
+        </div>
+    ) : !isLoadingHospitals && hospitals.length === 0 ? (
+        <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-sm text-amber-700 font-medium">
+            No hospitals are accepting registrations yet. Please check back later.
+        </div>
+    ) : null;
 
     // Use custom hooks for form and auth management
     const form = useForm({
@@ -179,12 +202,18 @@ const Register = () => {
             }
 
             // Debug log removed
-            await registerUser(payload);
-            
-            // Redirect after successful registration
+            const result = await registerUser(payload);
+            const loginRole = userType === 'patient' ? 'patient' : 'doctor';
+
+            // Redirect after successful registration: verify the email first when required
             setTimeout(() => {
-                window.location.href = userType === 'patient' ? '/auth/login/patient' : '/auth/login/doctor';
-            }, 2000);
+                if (result?.requiresEmailVerification) {
+                    const query = new URLSearchParams({ email: result.email || payload.email, role: loginRole });
+                    window.location.href = `/auth/verify-email?${query}`;
+                } else {
+                    window.location.href = `/auth/login/${loginRole}`;
+                }
+            }, 1500);
         } catch (err) {
             console.error('Registration error:', err);
         }
@@ -339,15 +368,17 @@ const Register = () => {
                                         <label className="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-3">Find Your Record</label>
                                         <p className="text-xs text-slate-500 mb-3">Enter the card number and phone number registered with your hospital</p>
                                     </div>
-                                    <SelectField
-                                        label="Hospital"
-                                        name="searchHospitalId"
-                                        options={hospitals.map(h => ({ label: h.name, value: h.id }))}
-                                        value={searchHospitalId}
-                                        onChange={(e) => setSearchHospitalId(e.target.value)}
-                                        placeholder={isLoadingHospitals ? 'Loading hospitals...' : 'Choose your hospital'}
-                                        required
-                                    />
+                                    {hospitalsNotice || (
+                                        <SelectField
+                                            label="Hospital"
+                                            name="searchHospitalId"
+                                            options={hospitals.map(h => ({ label: h.name, value: h.id }))}
+                                            value={searchHospitalId}
+                                            onChange={(e) => setSearchHospitalId(e.target.value)}
+                                            placeholder={isLoadingHospitals ? 'Loading hospitals...' : 'Choose your hospital'}
+                                            required
+                                        />
+                                    )}
                                     <input
                                         type="text"
                                         placeholder="Patient card number (e.g. PAT-123456)"
@@ -465,7 +496,7 @@ const Register = () => {
                                                 <Loader2 size={16} className="animate-spin text-primary mr-2" />
                                                 <span className="text-sm text-slate-500">Loading hospitals...</span>
                                             </div>
-                                        ) : (
+                                        ) : hospitalsNotice || (
                                             <SelectField
                                                 label="Select Hospital"
                                                 name="hospitalId"

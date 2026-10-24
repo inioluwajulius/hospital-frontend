@@ -2,6 +2,7 @@
 export { default as FormInput } from './FormInput.jsx';
 export { default as PasswordInput } from './PasswordInput.jsx';
 export { default as SelectField } from './SelectField.jsx';
+export { default as OtpInput } from './OtpInput.jsx';
 
 // Form Components
 export {

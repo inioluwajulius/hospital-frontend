@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Users, UserPlus, Send } from 'lucide-react';
+import { Users, UserPlus, Send, Settings2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import UserAccountPanel from '../../component/users/UserAccountPanel';
 import toast from 'react-hot-toast';
 import { api } from '../../services/api';
 import { PageHeader, PrimaryButton, SecondaryButton, SearchInput, Panel, Modal, Field, TextInput, Select, SubmitRow, LoadingBlock, EmptyRow, StatusBadge } from '../staff/StaffUI';
-import { listOf, errorText, formatDate, ROLE_LABELS } from '../staff/staffUtils';
+import { listOf, errorText, formatDate, ROLE_LABELS, getCurrentUser } from '../staff/staffUtils';
 
 // Roles the backend allows a hospital admin to invite
 const INVITABLE_ROLES = ['doctor', 'nurse', 'receptionist', 'lab_technician', 'pharmacist', 'radiologist', 'accountant'];
@@ -19,6 +21,12 @@ const AdminStaff = () => {
   const [invite, setInvite] = useState(EMPTY_INVITE);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState({});
+  const [statusFilter, setStatusFilter] = useState('');
+  // ?user=<id> opens that account directly (used by the Doctors page "Edit" button)
+  const [params, setParams] = useSearchParams();
+  const selected = params.get('user');
+  const openUser = (id) => setParams(id ? { user: id } : {});
+  const me = getCurrentUser();
 
   const loadStaff = async () => {
     try {
@@ -39,8 +47,9 @@ const AdminStaff = () => {
     const q = search.trim().toLowerCase();
     return staff
       .filter((s) => !roleFilter || s.role === roleFilter)
+      .filter((s) => !statusFilter || s.status === statusFilter)
       .filter((s) => !q || [s.name, s.email, s.department].some((v) => String(v || '').toLowerCase().includes(q)));
-  }, [staff, search, roleFilter]);
+  }, [staff, search, roleFilter, statusFilter]);
 
   const handleInvite = async (e) => {
     e.preventDefault();
@@ -91,6 +100,8 @@ const AdminStaff = () => {
           <SearchInput value={search} onChange={setSearch} placeholder="Search by name, email or department..." />
           <Select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} placeholder="All roles"
             options={[...roleOptions, { value: 'hospital_admin', label: 'Hospital Admin' }]} className="md:w-56" />
+          <Select aria-label="Filter by status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} placeholder="All statuses" className="md:w-48"
+            options={['active', 'pending', 'inactive', 'suspended'].map((s) => ({ value: s, label: s[0].toUpperCase() + s.slice(1) }))} />
         </div>
         {loading ? (
           <LoadingBlock text="Loading staff..." />
@@ -109,17 +120,31 @@ const AdminStaff = () => {
                     {m.email} · {ROLE_LABELS[m.role] || m.role}{m.department ? ` · ${m.department}` : ''} · added {formatDate(m.createdAt)}
                   </p>
                 </div>
-                <StatusBadge tone={STATUS_TONES[m.status] || 'slate'}>{m.status === 'pending' && m.invitedBy ? 'invited' : m.status}</StatusBadge>
-                {m.status === 'pending' && m.invitedBy && (
+                <StatusBadge tone={STATUS_TONES[m.status] || 'slate'}>{m.status === 'pending' && m.invited ? 'invited' : m.status}</StatusBadge>
+                {m.status === 'pending' && m.invited && (
                   <SecondaryButton onClick={() => handleResend(m)} disabled={resending[m._id]}>
                     <Send size={16} /> Resend invite
                   </SecondaryButton>
                 )}
+                <SecondaryButton onClick={() => openUser(m._id)} aria-label={`Manage ${m.name}`}>
+                  <Settings2 size={16} /> Manage
+                </SecondaryButton>
               </div>
             ))}
           </div>
         )}
       </Panel>
+
+      {selected && (
+        <UserAccountPanel
+          basePath="/hospital-admin/staff"
+          userId={selected}
+          assignableRoles={INVITABLE_ROLES}
+          currentUserId={me?.id}
+          onClose={() => openUser(null)}
+          onUpdated={(updated) => setStaff((list) => list.map((s) => (s._id === updated._id ? { ...s, ...updated } : s)))}
+        />
+      )}
 
       <Modal open={isInviteOpen} title="Invite staff member" onClose={() => setIsInviteOpen(false)}>
         <form onSubmit={handleInvite} className="space-y-4">

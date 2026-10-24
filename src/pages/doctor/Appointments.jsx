@@ -23,6 +23,7 @@ import {
   Info,
   AlertCircle
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { cn } from '../../lib/utils';
 import { format, parse, addDays, startOfWeek, startOfMonth, endOfMonth, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay } from 'date-fns';
@@ -968,16 +969,13 @@ const Appointments = () => {
                   </div>
                 </div>
 
-                {selectedAppointment.type === 'Consultation' && (
-                  <button 
-                    onClick={() => {
-                      toast.loading('Starting secure telemedicine session...');
-                      setTimeout(() => toast.dismiss(), 2000);
-                    }}
+                {selectedAppointment.mode === 'telemedicine' && ['scheduled', 'in-progress'].includes(String(selectedAppointment.status || 'scheduled').toLowerCase()) && (
+                  <Link
+                    to={`/consultation/${selectedAppointment._id}`}
                     className="w-full py-4 bg-indigo-600 text-white font-extrabold rounded-2xl shadow-lg shadow-indigo-600/20 hover:bg-indigo-700 active:scale-95 transition-all flex items-center justify-center gap-3">
                     <Video size={20} />
-                    Start Telemedicine Session
-                  </button>
+                    Open Telemedicine Room
+                  </Link>
                 )}
 
                 {(!selectedAppointment.status || selectedAppointment.status === 'Scheduled') && (
