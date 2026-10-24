@@ -13,6 +13,7 @@ import RegistrationSelector from "./pages/RegistrationSelector";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail";
+import AcceptInvite from "./pages/auth/AcceptInvite";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -20,6 +21,7 @@ import DoctorRegister from "./pages/admin/DoctorRegister";
 import AdminDoctors from "./pages/admin/Doctors";
 import AdminPatients from "./pages/admin/Patients";
 import AdminPendingDoctors from "./pages/admin/PendingApprovals";
+import AdminStaff from "./pages/admin/Staff";
 
 // Super Admin Pages
 import SuperAdminDashboard from "./pages/superadmin/Dashboard";
@@ -44,6 +46,15 @@ import PatientPharmacy from "./pages/patient/Pharmacy";
 import PatientLabResults from "./pages/patient/LabResults";
 import PatientRadiologyReports from "./pages/patient/RadiologyReports";
 import PatientSettings from "./pages/patient/Settings";
+// Staff portal
+import StaffDashboard from "./pages/staff/Dashboard";
+import StaffPatients from "./pages/staff/Patients";
+import StaffAppointments from "./pages/staff/Appointments";
+import StaffLabWork from "./pages/staff/LabWork";
+import StaffPharmacy from "./pages/staff/Pharmacy";
+import StaffRadiology from "./pages/staff/Radiology";
+import StaffBilling from "./pages/staff/Billing";
+import { STAFF_ROLES } from "./pages/staff/staffUtils";
 // Shared
 import DashboardLayout from "./layouts/DashboardLayout";
 import { AuditLogs } from "./component/AuditLogs";
@@ -72,6 +83,7 @@ function App() {
           <Route path="/auth/forgot-password" element={<ForgotPassword />} />
           <Route path="/auth/reset-password/:token" element={<ResetPassword />} />
           <Route path="/auth/verify-email/:token" element={<VerifyEmail />} />
+          <Route path="/auth/accept-invite/:token" element={<AcceptInvite />} />
           
           {/* ========== ADMIN ROUTES ========== */}
           <Route element={<DashboardLayout />}>
@@ -83,6 +95,7 @@ function App() {
             <Route path="/admin/doctors" element={<ProtectedRoute requiredRole="admin"><AdminDoctors /></ProtectedRoute>} />
             <Route path="/admin/patients" element={<ProtectedRoute requiredRole="admin"><AdminPatients /></ProtectedRoute>} />
             <Route path="/admin/pending-approvals" element={<ProtectedRoute requiredRole="admin"><AdminPendingDoctors /></ProtectedRoute>} />
+            <Route path="/admin/staff" element={<ProtectedRoute requiredRole="admin"><AdminStaff /></ProtectedRoute>} />
             <Route path="/admin/audit-logs" element={<ProtectedRoute requiredRole="admin"><AuditLogs /></ProtectedRoute>} />
             <Route path="/admin/settings" element={<ProtectedRoute requiredRole="admin"><Settings /></ProtectedRoute>} />
           </Route>
@@ -115,6 +128,17 @@ function App() {
             <Route path="/patient/billing" element={<ProtectedRoute requiredRole="patient"><PatientBilling /></ProtectedRoute>} />
             <Route path="/patient/pharmacy" element={<ProtectedRoute requiredRole="patient"><PatientPharmacy /></ProtectedRoute>} />
             <Route path="/patient/settings" element={<ProtectedRoute requiredRole="patient"><PatientSettings /></ProtectedRoute>} />
+          </Route>
+
+          {/* ========== STAFF ROUTES (nurses, receptionists, lab, pharmacy, radiology, billing) ========== */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/staff/dashboard" element={<ProtectedRoute requiredRole={STAFF_ROLES}><StaffDashboard /></ProtectedRoute>} />
+            <Route path="/staff/patients" element={<ProtectedRoute requiredRole={['nurse', 'receptionist']}><StaffPatients /></ProtectedRoute>} />
+            <Route path="/staff/appointments" element={<ProtectedRoute requiredRole={['nurse', 'receptionist']}><StaffAppointments /></ProtectedRoute>} />
+            <Route path="/staff/lab" element={<ProtectedRoute requiredRole="lab_technician"><StaffLabWork /></ProtectedRoute>} />
+            <Route path="/staff/pharmacy" element={<ProtectedRoute requiredRole="pharmacist"><StaffPharmacy /></ProtectedRoute>} />
+            <Route path="/staff/radiology" element={<ProtectedRoute requiredRole="radiologist"><StaffRadiology /></ProtectedRoute>} />
+            <Route path="/staff/billing" element={<ProtectedRoute requiredRole="accountant"><StaffBilling /></ProtectedRoute>} />
           </Route>
 
           {/* 404 Page */}
